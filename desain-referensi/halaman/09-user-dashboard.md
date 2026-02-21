@@ -1,0 +1,67 @@
+# 🏠 User — Dashboard
+
+## Layout
+- **Tipe:** Navbar top + konten full-width (tanpa sidebar)
+- **Navbar:** Logo, nama anggota, dropdown (Profil, Logout)
+- **Warna:** lebih cerah/friendly daripada admin
+
+## Wireframe
+
+```
+┌──────────────────────────────────────────────┐
+│  [Logo] Sistem Potongan Gaji    👤 Ahmad ▼  │
+│──────────────────────────────────────────────│
+│                                              │
+│  Selamat Datang, Ahmad! 👋                   │
+│  Kode Anggota: C001 | Jabatan: Staff         │
+│                                              │
+│  ┌──────────────┐  ┌──────────────┐          │
+│  │ 💰           │  │ 📋           │          │
+│  │ Total Potong │  │ Jenis Potong │          │
+│  │ Bulan Ini    │  │ Aktif        │          │
+│  │              │  │              │          │
+│  │ Rp 1.700.000│  │ 3 jenis      │          │
+│  └──────────────┘  └──────────────┘          │
+│                                              │
+│  ┌──────────────────────────────────────────┐│
+│  │ 📊 Riwayat Potongan 6 Bulan Terakhir     ││
+│  │                                          ││
+│  │  ████                                    ││
+│  │  ████ ████                               ││
+│  │  ████ ████ ████ ████ ████ ████           ││
+│  │  Sep  Okt  Nov  Des  Jan  Feb            ││
+│  └──────────────────────────────────────────┘│
+│                                              │
+│  ┌──────────────────────────────────────────┐│
+│  │ 📋 Potongan Bulan Ini (Februari 2026)    ││
+│  │                                          ││
+│  │  ┌──────────────┬──────────────────────┐ ││
+│  │  │Jenis         │Jumlah               │ ││
+│  │  ├──────────────┼──────────────────────┤ ││
+│  │  │Koperasi      │Rp 500.000           │ ││
+│  │  │BPJS Kesehatan│Rp 200.000           │ ││
+│  │  │Pinj. Panjang │Rp 1.000.000         │ ││
+│  │  ├──────────────┼──────────────────────┤ ││
+│  │  │TOTAL         │Rp 1.700.000         │ ││
+│  │  └──────────────┴──────────────────────┘ ││
+│  │                                          ││
+│  │  [📄 Lihat Riwayat Lengkap]              ││
+│  └──────────────────────────────────────────┘│
+│                                              │
+│  © 2026 PT Primatex Indonesia                │
+└──────────────────────────────────────────────┘
+```
+
+## Komponen
+- **Greeting card:** Nama anggota, kode, jabatan
+- **Card Stats (2 buah):**
+  - Total potongan bulan ini (Rp)
+  - Jumlah jenis potongan aktif
+- **Grafik:** Bar chart 6 bulan terakhir (personal)
+- **Tabel bulan ini:** ringkasan potongan bulan berjalan
+- **Link:** ke halaman riwayat lengkap
+
+## Responsif
+- Cards: stack vertical di mobile
+- Grafik: full-width
+- Tabel: readable di mobile (hanya 2 kolom)

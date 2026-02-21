@@ -1,0 +1,73 @@
+# 📄 User — Riwayat Potongan
+
+## Layout
+- Navbar top + konten full-width (tanpa sidebar)
+
+## Wireframe
+
+```
+┌──────────────────────────────────────────────┐
+│  [Logo] Sistem Potongan Gaji    👤 Ahmad ▼  │
+│──────────────────────────────────────────────│
+│                                              │
+│  Riwayat Potongan Gaji Saya                  │
+│                                              │
+│  ┌──────────────────────────────────────────┐│
+│  │ Filter:                                  ││
+│  │ Bulan [▼ Semua]   Tahun [▼ 2026]         ││
+│  │ Jenis Potongan [▼ Semua]                 ││
+│  │ [🔍 Filter]                              ││
+│  └──────────────────────────────────────────┘│
+│                                              │
+│  ┌───┬──────┬───────────────┬────┬────────┐  │
+│  │No │Bulan │Jenis Potongan │Jml │Detail  │  │
+│  ├───┼──────┼───────────────┼────┼────────┤  │
+│  │1  │Feb 26│Koperasi       │500K│  👁️    │  │
+│  │2  │Feb 26│BPJS Kesehatan │200K│  👁️    │  │
+│  │3  │Feb 26│Pinj. Panjang  │1.0M│  👁️    │  │
+│  │4  │Jan 26│Koperasi       │500K│  👁️    │  │
+│  │5  │Jan 26│Pinj. Panjang  │1.0M│  👁️    │  │
+│  └───┴──────┴───────────────┴────┴────────┘  │
+│                                              │
+│  ◀ 1  2  3 ▶                                │
+│                                              │
+│  --- MODAL DETAIL (klik 👁️): ---             │
+│                                              │
+│  ┌─────────────────────────────────┐         │
+│  │  Detail Potongan                │         │
+│  │─────────────────────────────────│         │
+│  │  Jenis    : Pinjaman Panjang    │         │
+│  │  Bulan    : Februari 2026       │         │
+│  │  Angsuran : Rp 1.000.000       │         │
+│  │                                 │         │
+│  │  ── Rincian Pinjaman ──         │         │
+│  │  Pinjaman     : Rp 12.000.000  │         │
+│  │  Saldo Awal   : Rp  8.000.000  │         │
+│  │  Bulan Ke     : 5              │         │
+│  │  Total Kali   : 12             │         │
+│  │  Pokok        : Rp  1.000.000  │         │
+│  │  Sisa Saldo   : Rp  7.000.000  │         │
+│  │                                 │         │
+│  │  [Tutup]                        │         │
+│  └─────────────────────────────────┘         │
+└──────────────────────────────────────────────┘
+```
+
+## Komponen
+- **Filter bar:** dropdowns untuk bulan, tahun, jenis potongan
+- **Tabel riwayat:** semua potongan milik user, sorted by bulan desc
+- **Tombol Detail (👁️):** buka modal dengan detail rincian
+- **Modal Detail:**
+  - Info dasar: jenis, bulan, angsuran
+  - Rincian pinjaman (jika ada data_rinci): PINJ, AWAL, BULN, KALI, PKOK, SALD
+  - Hanya muncul section pinjaman jika data_rinci tidak null
+- **Pagination:** di bawah tabel
+
+## Row-Level Security
+- Query HANYA menampilkan data milik anggota yang sedang login
+- Tidak ada cara untuk melihat data anggota lain
+
+## Responsif
+- Filter: stack vertical di mobile
+- Tabel: card-based layout di mobile (bukan tabel)
+- Modal: full-screen di mobile
