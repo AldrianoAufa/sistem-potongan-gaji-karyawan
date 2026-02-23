@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\karyawan;
+use App\Models\Karyawan;
 use App\Models\Jabatan;
 use App\Models\Departemen;
 use App\Models\User;
@@ -11,11 +11,11 @@ use App\Models\JenisPotongan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
-class karyawanController extends Controller
+class KaryawanController extends Controller
 {
     public function index(Request $request)
     {
-        $query = karyawan::with(['jabatan', 'departemen']);
+        $query = Karyawan::with(['jabatan', 'departemen']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -25,10 +25,21 @@ class karyawanController extends Controller
             });
         }
 
+        if ($request->filled('jabatan_id')) {
+            $query->where('jabatan_id', $request->jabatan_id);
+        }
+
+        if ($request->filled('departemen_id')) {
+            $query->where('departemen_id', $request->departemen_id);
+        }
+
         $karyawan = $query->orderBy('kode_karyawan')->paginate(15);
         $karyawan->appends($request->query());
 
-        return view('admin.karyawan.index', compact('karyawan'));
+        $jabatan = Jabatan::orderBy('nama_jabatan')->get();
+        $departemen = Departemen::orderBy('kode_departemen')->get();
+
+        return view('admin.karyawan.index', compact('karyawan', 'jabatan', 'departemen'));
     }
 
     public function create()
@@ -50,7 +61,7 @@ class karyawanController extends Controller
             'password' => 'nullable|required_if:buat_akun,1|string|min:6',
         ]);
 
-        $karyawan = karyawan::create([
+        $karyawan = Karyawan::create([
             'kode_karyawan' => $validated['kode_karyawan'],
             'nama' => $validated['nama'],
             'jabatan_id' => $validated['jabatan_id'],
@@ -71,17 +82,15 @@ class karyawanController extends Controller
             ->with('success', 'karyawan berhasil ditambahkan.');
     }
 
-    public function edit(karyawan $anggotum)
+    public function edit(Karyawan $karyawan)
     {
         $jabatan = Jabatan::orderBy('nama_jabatan')->get();
         $departemen = Departemen::orderBy('kode_departemen')->get();
-        $karyawan = $anggotum;
         return view('admin.karyawan.edit', compact('karyawan', 'jabatan', 'departemen'));
     }
 
-    public function update(Request $request, karyawan $anggotum)
+    public function update(Request $request, Karyawan $karyawan)
     {
-        $karyawan = $anggotum;
         $validated = $request->validate([
             'kode_karyawan' => 'required|string|max:50|unique:karyawan,kode_karyawan,' . $karyawan->id,
             'nama' => 'required|string|max:255',
@@ -95,9 +104,8 @@ class karyawanController extends Controller
             ->with('success', 'karyawan berhasil diperbarui.');
     }
 
-    public function destroy(karyawan $anggotum)
+    public function destroy(Karyawan $karyawan)
     {
-        $karyawan = $anggotum;
         // Check if karyawan has input_bulanan
         if ($karyawan->inputBulanan()->count() > 0) {
             return back()->with('error', 'Tidak dapat menghapus karyawan yang memiliki data potongan.');
@@ -113,9 +121,10 @@ class karyawanController extends Controller
         return redirect()->route('admin.karyawan.index')
             ->with('success', 'karyawan berhasil dihapus.');
     }
+
     public function mapping(Request $request)
     {
-        $query = karyawan::with(['jabatan', 'departemen', 'potongan']);
+        $query = Karyawan::with(['jabatan', 'departemen', 'potongan']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -133,7 +142,7 @@ class karyawanController extends Controller
         return view('admin.karyawan.mapping', compact('karyawanList', 'jenisPotongan'));
     }
 
-    public function updateMapping(Request $request, karyawan $karyawan)
+    public function updateMapping(Request $request, Karyawan $karyawan)
     {
         $validated = $request->validate([
             'jenis_potongan_ids' => 'nullable|array',

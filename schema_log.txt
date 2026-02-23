@@ -1,0 +1,7 @@
+Field: id | Type: bigint(20) unsigned
+Field: kode_karyawan | Type: varchar(255)
+Field: nama | Type: varchar(255)
+Field: jabatan_id | Type: bigint(20) unsigned
+Field: departemen_id | Type: bigint(20) unsigned
+Field: created_at | Type: timestamp
+Field: updated_at | Type: timestamp

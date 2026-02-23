@@ -7,20 +7,37 @@
 </div>
 
 <!-- Info Box: Required Columns -->
-<div class="card card-custom mb-3" style="border-left: 4px solid #28A745;">
-    <div class="card-body">
-        <h6 class="text-success mb-2"><i class="bi bi-check-circle-fill me-1"></i>Kolom Wajib</h6>
-        <div class="d-flex flex-wrap gap-1 mb-2">
-            @foreach(['KODE','NAMA','JABATAN','DEPARTEMEN'] as $col)
-            <span class="badge bg-success" style="font-size: 0.8rem;">{{ $col }}</span>
-            @endforeach
+<div class="row mb-3">
+    <div class="col-md-8">
+        <div class="card card-custom h-100" style="border-left: 4px solid #28A745;">
+            <div class="card-body">
+                <h6 class="text-success mb-2"><i class="bi bi-check-circle-fill me-1"></i>Format Kolom Excel</h6>
+                <div class="d-flex flex-wrap gap-1 mb-2">
+                    @foreach(['NIK','NAMA','JABATAN','DEPARTEMEN'] as $col)
+                    <span class="badge bg-success" style="font-size: 0.8rem;">{{ $col }}</span>
+                    @endforeach
+                    @foreach(['USERNAME','PASSWORD'] as $col)
+                    <span class="badge bg-secondary" style="font-size: 0.8rem;">{{ $col }} (Opsional)</span>
+                    @endforeach
+                </div>
+                <small class="text-muted">
+                    <strong>NIK</strong>: Nomer Induk Karyawan | 
+                    <strong>NAMA</strong>: Nama Lengkap | 
+                    <strong>JABATAN</strong>: Nama Jabatan | 
+                    <strong>DEPARTEMEN</strong>: Kode Dep
+                </small>
+            </div>
         </div>
-        <small class="text-muted">
-            <strong>KODE</strong> = NIK (unik) &nbsp;|&nbsp;
-            <strong>NAMA</strong> = Nama lengkap &nbsp;|&nbsp;
-            <strong>JABATAN</strong> = Nama jabatan &nbsp;|&nbsp;
-            <strong>DEPARTEMEN</strong> = Kode departemen
-        </small>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-custom h-100 border-primary border-opacity-25 bg-primary bg-opacity-10">
+            <div class="card-body d-flex flex-column justify-content-center text-center">
+                <p class="mb-2 fw-semibold text-primary" style="font-size: 0.9rem;">Belum punya formatnya?</p>
+                <a href="{{ route('admin.import-karyawan.template') }}" class="btn btn-primary">
+                    <i class="bi bi-file-earmark-excel-fill me-1"></i>Unduh Template
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 

@@ -6,20 +6,39 @@
     <div>
         <h4><i class="bi bi-people-fill me-2"></i>Kelola karyawan</h4>
     </div>
-    <div class="d-flex gap-2">
-        <form class="d-flex" method="GET" action="{{ route('admin.karyawan.index') }}">
+    <div class="d-flex gap-2 flex-wrap">
+        <form class="d-flex gap-2 flex-wrap" method="GET" action="{{ route('admin.karyawan.index') }}">
+            <select name="jabatan_id" class="form-select form-select-sm" style="width: 150px;" onchange="this.form.submit()">
+                <option value="">Semua Jabatan</option>
+                @foreach($jabatan as $j)
+                    <option value="{{ $j->id }}" {{ request('jabatan_id') == $j->id ? 'selected' : '' }}>{{ $j->nama_jabatan }}</option>
+                @endforeach
+            </select>
+
+            <select name="departemen_id" class="form-select form-select-sm" style="width: 150px;" onchange="this.form.submit()">
+                <option value="">Semua Dep</option>
+                @foreach($departemen as $d)
+                    <option value="{{ $d->id }}" {{ request('departemen_id') == $d->id ? 'selected' : '' }}>{{ $d->kode_departemen }}</option>
+                @endforeach
+            </select>
+
             <div class="input-group" style="width: 250px;">
                 <input type="text" class="form-control form-control-sm" name="search"
                        placeholder="Cari nama/kode..." value="{{ request('search') }}">
                 <button class="btn btn-outline-primary btn-sm" type="submit"><i class="bi bi-search"></i></button>
+                @if(request()->anyFilled(['search', 'jabatan_id', 'departemen_id']))
+                    <a href="{{ route('admin.karyawan.index') }}" class="btn btn-outline-secondary btn-sm" title="Reset"><i class="bi bi-x-lg"></i></a>
+                @endif
             </div>
         </form>
-        <a href="{{ route('admin.import-karyawan.form') }}" class="btn btn-outline-success btn-sm">
-            <i class="bi bi-file-earmark-excel me-1"></i>Import Excel
-        </a>
-        <a href="{{ route('admin.karyawan.create') }}" class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-lg me-1"></i>Tambah karyawan
-        </a>
+        <div class="ms-auto d-flex gap-2">
+            <a href="{{ route('admin.import-karyawan.form') }}" class="btn btn-outline-success btn-sm">
+                <i class="bi bi-file-earmark-excel me-1"></i>Import Excel
+            </a>
+            <a href="{{ route('admin.karyawan.create') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Tambah karyawan
+            </a>
+        </div>
     </div>
 </div>
 
@@ -34,7 +53,6 @@
                         <th>Nama</th>
                         <th>Jabatan</th>
                         <th>Departemen</th>
-                        <th>Akun</th>
                         <th style="width: 120px;">Aksi</th>
                     </tr>
                 </thead>
@@ -46,13 +64,6 @@
                         <td>{{ $item->nama }}</td>
                         <td>{{ $item->jabatan->nama_jabatan ?? '-' }}</td>
                         <td><span class="badge bg-secondary-subtle text-secondary fw-semibold">{{ $item->departemen->kode_departemen ?? '-' }}</span></td>
-                        <td>
-                            @if($item->user)
-                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>{{ $item->user->username }}</span>
-                            @else
-                                <span class="badge bg-secondary">Belum ada</span>
-                            @endif
-                        </td>
                         <td>
                             <a href="{{ route('admin.karyawan.edit', $item) }}" class="btn btn-warning btn-sm" title="Edit">
                                 <i class="bi bi-pencil-square"></i>

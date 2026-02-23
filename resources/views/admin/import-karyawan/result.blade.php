@@ -41,6 +41,7 @@
             </div>
         </div>
     </div>
+    @endif
 </div>
 
 <div class="alert alert-{{ $gagal == 0 ? 'success' : 'warning' }}">
@@ -64,7 +65,7 @@
                 <thead>
                     <tr>
                         <th>Baris</th>
-                        <th>Kode</th>
+                        <th>NIK</th>
                         <th>Keterangan</th>
                     </tr>
                 </thead>
@@ -72,7 +73,7 @@
                     @foreach($errors as $err)
                     <tr>
                         <td><span class="badge bg-light text-dark">{{ $err['baris'] }}</span></td>
-                        <td>{{ $err['kode'] }}</td>
+                        <td>{{ $err['nik'] ?? $err['kode'] ?? '-' }}</td>
                         <td class="text-danger"><i class="bi bi-x-circle me-1"></i>{{ $err['error'] }}</td>
                     </tr>
                     @endforeach

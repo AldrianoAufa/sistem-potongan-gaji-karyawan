@@ -11,9 +11,6 @@
         <a href="{{ route('admin.import.form') }}" class="btn btn-success btn-sm">
             <i class="bi bi-file-earmark-excel me-1"></i>Import Excel
         </a>
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#tambahModal">
-            <i class="bi bi-plus-lg me-1"></i>Tambah Manual
-        </button>
     </div>
 </div>
 

@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
-use App\Http\Controllers\Admin\karyawanController;
+use App\Http\Controllers\Admin\KaryawanController;
 use App\Http\Controllers\Admin\JabatanController;
 use App\Http\Controllers\Admin\JenisPotonganController;
 use App\Http\Controllers\Admin\InputBulananController;
@@ -41,6 +41,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('/import', [ImportController::class, 'process'])->name('import.process');
 
     Route::get('/import-karyawan', [ImportkaryawanController::class, 'showForm'])->name('import-karyawan.form');
+    Route::get('/import-karyawan/template', [ImportkaryawanController::class, 'downloadTemplate'])->name('import-karyawan.template');
     Route::post('/import-karyawan', [ImportkaryawanController::class, 'process'])->name('import-karyawan.process');
 
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');

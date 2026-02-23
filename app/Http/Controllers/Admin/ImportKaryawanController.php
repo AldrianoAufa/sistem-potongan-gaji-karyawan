@@ -3,22 +3,68 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\karyawan;
+use App\Models\Karyawan;
 use App\Models\Jabatan;
 use App\Models\Departemen;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
 
 class ImportkaryawanController extends Controller
 {
-    private const EXPECTED_HEADERS = ['KODE', 'NAMA', 'JABATAN', 'DEPARTEMEN'];
+    private const EXPECTED_HEADERS = ['NIK', 'NAMA', 'JABATAN', 'DEPARTEMEN'];
     private const OPTIONAL_HEADERS = ['USERNAME', 'PASSWORD'];
 
     public function showForm()
     {
         return view('admin.import-karyawan.index');
     }
+
+    public function downloadTemplate(): StreamedResponse
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Headers
+        $headers = array_merge(self::EXPECTED_HEADERS, self::OPTIONAL_HEADERS);
+        foreach ($headers as $index => $header) {
+            $column = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 1);
+            $sheet->setCellValue($column . '1', $header);
+            $sheet->getStyle($column . '1')->getFont()->setBold(true);
+        }
+
+        // Add an example row
+        $sheet->setCellValue('A2', '123456');
+        $sheet->setCellValue('B2', 'Budi Santoso');
+        $sheet->setCellValue('C2', 'Staff Utama');
+        $sheet->setCellValue('D2', 'IT');
+        $sheet->setCellValue('E2', 'budi123');
+        $sheet->setCellValue('F2', 'password123');
+
+        // Auto size columns
+        foreach (range('A', 'F') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $writer = new Xlsx($spreadsheet);
+
+        return response()->stream(
+            function () use ($writer) {
+                $writer->save('php://output');
+            },
+            200,
+            [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'attachment; filename="template_import_karyawan.xlsx"',
+                'Cache-Control' => 'max-age=0',
+            ]
+        );
+    }
+
 
     public function process(Request $request)
     {
@@ -66,7 +112,7 @@ class ImportkaryawanController extends Controller
         $headerMap = array_flip($headers);
 
         // Cache existing data
-        $existingKode = karyawan::pluck('kode_karyawan')->toArray();
+        $existingKode = Karyawan::pluck('kode_karyawan')->toArray();
         $existingUsernames = User::pluck('username')->toArray();
         $jabatanMap = Jabatan::pluck('id', 'nama_jabatan')->toArray();
         $departemenMap = Departemen::pluck('id', 'kode_departemen')->toArray();
@@ -91,32 +137,32 @@ class ImportkaryawanController extends Controller
                     continue;
                 }
 
-                $kode = trim($rowValues[$headerMap['KODE']] ?? '');
+                $kode = trim($rowValues[$headerMap['NIK']] ?? '');
                 $nama = trim($rowValues[$headerMap['NAMA']] ?? '');
                 $jabatanNama = trim($rowValues[$headerMap['JABATAN']] ?? '');
                 $departemenKode = trim($rowValues[$headerMap['DEPARTEMEN']] ?? '');
 
                 // Validate required fields
                 if (empty($kode)) {
-                    $errors[] = ['baris' => $rowNum, 'kode' => '-', 'error' => 'NIK kosong'];
+                    $errors[] = ['baris' => $rowNum, 'nik' => '-', 'error' => 'NIK kosong'];
                     $gagal++;
                     continue;
                 }
 
                 if (empty($nama)) {
-                    $errors[] = ['baris' => $rowNum, 'kode' => $kode, 'error' => 'Nama karyawan kosong'];
+                    $errors[] = ['baris' => $rowNum, 'nik' => $kode, 'error' => 'Nama karyawan kosong'];
                     $gagal++;
                     continue;
                 }
 
                 if (empty($jabatanNama)) {
-                    $errors[] = ['baris' => $rowNum, 'kode' => $kode, 'error' => 'Nama jabatan kosong'];
+                    $errors[] = ['baris' => $rowNum, 'nik' => $kode, 'error' => 'Nama jabatan kosong'];
                     $gagal++;
                     continue;
                 }
 
                 if (empty($departemenKode)) {
-                    $errors[] = ['baris' => $rowNum, 'kode' => $kode, 'error' => 'Kode departemen kosong'];
+                    $errors[] = ['baris' => $rowNum, 'nik' => $kode, 'error' => 'Kode departemen kosong'];
                     $gagal++;
                     continue;
                 }
@@ -142,7 +188,7 @@ class ImportkaryawanController extends Controller
 
                 // Check if karyawan already exists — update if so
                 if (in_array($kode, $existingKode)) {
-                    $karyawan = karyawan::where('kode_karyawan', $kode)->first();
+                    $karyawan = Karyawan::where('kode_karyawan', $kode)->first();
                     $karyawan->update([
                         'nama' => $nama,
                         'jabatan_id' => $jabatanId,
@@ -151,7 +197,7 @@ class ImportkaryawanController extends Controller
                     $diperbarui++;
                 } else {
                     // Create new karyawan
-                    $karyawan = karyawan::create([
+                    $karyawan = Karyawan::create([
                         'kode_karyawan' => $kode,
                         'nama' => $nama,
                         'jabatan_id' => $jabatanId,
@@ -171,7 +217,7 @@ class ImportkaryawanController extends Controller
                         if ($karyawan->user) {
                             // Already has account, skip
                         } elseif (in_array($username, $existingUsernames)) {
-                            $errors[] = ['baris' => $rowNum, 'kode' => $kode, 'error' => "Username '{$username}' sudah digunakan (akun tidak dibuat, data karyawan tetap tersimpan)"];
+                            $errors[] = ['baris' => $rowNum, 'nik' => $kode, 'error' => "Username '{$username}' sudah digunakan (akun tidak dibuat, data karyawan tetap tersimpan)"];
                         } else {
                             User::create([
                                 'username' => $username,

@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="page-header">
-    <h4><i class="bi bi-diagram-3-fill me-2"></i>Detail Departemen: {{ $departemen->nama_departemen }}</h4>
+    <h4><i class="bi bi-diagram-3-fill me-2"></i>Detail Departemen: {{ $departemen->nama_departemen }} (ID: {{ $departemen->id }})</h4>
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ route('admin.departemen.index') }}">Departemen</a></li>
