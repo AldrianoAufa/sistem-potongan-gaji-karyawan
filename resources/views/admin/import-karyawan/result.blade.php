@@ -1,9 +1,9 @@
 @extends('layouts.admin')
-@section('title', 'Hasil Import Anggota')
+@section('title', 'Hasil Import karyawan')
 
 @section('content')
 <div class="page-header">
-    <h4><i class="bi bi-check2-circle me-2"></i>Hasil Import Data Anggota</h4>
+    <h4><i class="bi bi-check2-circle me-2"></i>Hasil Import Data karyawan</h4>
 </div>
 
 <!-- Summary Cards -->
@@ -12,7 +12,7 @@
         <div class="card card-custom text-center py-3" style="border-left: 4px solid #28A745;">
             <div class="card-body py-2">
                 <div style="font-size: 1.75rem; font-weight: 700; color: #28A745;">{{ $berhasil }}</div>
-                <div class="text-muted" style="font-size: 0.85rem;">Anggota Baru</div>
+                <div class="text-muted" style="font-size: 0.85rem;">karyawan Baru</div>
             </div>
         </div>
     </div>
@@ -41,29 +41,15 @@
             </div>
         </div>
     </div>
-    @endif
-    @if($akunDibuat > 0)
-    <div class="col-md-4 col-6">
-        <div class="card card-custom text-center py-3" style="border-left: 4px solid #17A2B8;">
-            <div class="card-body py-2">
-                <div style="font-size: 1.75rem; font-weight: 700; color: #17A2B8;">{{ $akunDibuat }}</div>
-                <div class="text-muted" style="font-size: 0.85rem;">Akun Login Dibuat</div>
-            </div>
-        </div>
-    </div>
-    @endif
 </div>
 
 <div class="alert alert-{{ $gagal == 0 ? 'success' : 'warning' }}">
     <i class="bi bi-{{ $gagal == 0 ? 'check-circle-fill' : 'exclamation-triangle-fill' }} me-2"></i>
-    Import data anggota selesai:
+    Import data karyawan selesai:
     <strong>{{ $berhasil }}</strong> baru,
     <strong>{{ $diperbarui }}</strong> diperbarui{{ $gagal > 0 ? ", <strong>{$gagal}</strong> gagal" : '' }}.
     @if($jabatanBaru > 0)
         <br><i class="bi bi-building me-1"></i><strong>{{ $jabatanBaru }}</strong> jabatan baru otomatis dibuat.
-    @endif
-    @if($akunDibuat > 0)
-        <br><i class="bi bi-person-badge me-1"></i><strong>{{ $akunDibuat }}</strong> akun login berhasil dibuat.
     @endif
 </div>
 
@@ -98,11 +84,11 @@
 @endif
 
 <div class="d-flex gap-2">
-    <a href="{{ route('admin.import-anggota.form') }}" class="btn btn-primary">
+    <a href="{{ route('admin.import-karyawan.form') }}" class="btn btn-primary">
         <i class="bi bi-upload me-1"></i>Import Lagi
     </a>
-    <a href="{{ route('admin.anggota.index') }}" class="btn btn-outline-primary">
-        <i class="bi bi-people me-1"></i>Lihat Daftar Anggota
+    <a href="{{ route('admin.karyawan.index') }}" class="btn btn-outline-primary">
+        <i class="bi bi-people me-1"></i>Lihat Daftar karyawan
     </a>
     <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary">
         <i class="bi bi-house me-1"></i>Dashboard

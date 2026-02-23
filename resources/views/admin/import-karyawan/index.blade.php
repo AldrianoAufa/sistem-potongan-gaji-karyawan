@@ -1,9 +1,9 @@
 @extends('layouts.admin')
-@section('title', 'Import Data Anggota')
+@section('title', 'Import Data karyawan')
 
 @section('content')
 <div class="page-header">
-    <h4><i class="bi bi-people-fill me-2"></i>Import Data Anggota dari Excel</h4>
+    <h4><i class="bi bi-people-fill me-2"></i>Import Data karyawan dari Excel</h4>
 </div>
 
 <!-- Info Box: Required Columns -->
@@ -11,45 +11,31 @@
     <div class="card-body">
         <h6 class="text-success mb-2"><i class="bi bi-check-circle-fill me-1"></i>Kolom Wajib</h6>
         <div class="d-flex flex-wrap gap-1 mb-2">
-            @foreach(['KODE','NAMA','JABATAN'] as $col)
+            @foreach(['KODE','NAMA','JABATAN','DEPARTEMEN'] as $col)
             <span class="badge bg-success" style="font-size: 0.8rem;">{{ $col }}</span>
             @endforeach
         </div>
         <small class="text-muted">
-            <strong>KODE</strong> = Kode anggota (unik) &nbsp;|&nbsp;
+            <strong>KODE</strong> = NIK (unik) &nbsp;|&nbsp;
             <strong>NAMA</strong> = Nama lengkap &nbsp;|&nbsp;
-            <strong>JABATAN</strong> = Nama jabatan (otomatis dibuat jika belum ada)
+            <strong>JABATAN</strong> = Nama jabatan &nbsp;|&nbsp;
+            <strong>DEPARTEMEN</strong> = Kode departemen
         </small>
     </div>
 </div>
 
-<!-- Info Box: Optional Columns -->
-<div class="card card-custom mb-4" style="border-left: 4px solid #17A2B8;">
-    <div class="card-body">
-        <h6 class="text-info mb-2"><i class="bi bi-info-circle-fill me-1"></i>Kolom Opsional (Untuk Membuat Akun Login)</h6>
-        <div class="d-flex flex-wrap gap-1 mb-2">
-            @foreach(['USERNAME','PASSWORD'] as $col)
-            <span class="badge bg-info" style="font-size: 0.8rem;">{{ $col }}</span>
-            @endforeach
-        </div>
-        <small class="text-muted">
-            Jika ingin sekaligus membuatkan akun login, tambahkan kolom <strong>USERNAME</strong> dan <strong>PASSWORD</strong>,
-            lalu centang opsi "Buat akun login" di form di bawah.
-        </small>
-    </div>
-</div>
 
 <!-- Behavior Note -->
 <div class="alert alert-warning py-2 mb-4" style="font-size: 0.85rem;">
     <i class="bi bi-exclamation-triangle-fill me-2"></i>
-    <strong>Catatan:</strong> Jika kode anggota sudah ada di database, data anggota tersebut akan <strong>diperbarui</strong> (update), bukan diduplikasi.
+    <strong>Catatan:</strong> Jika NIK sudah ada di database, data karyawan tersebut akan <strong>diperbarui</strong> (update), bukan diduplikasi.
     Jabatan yang belum ada akan <strong>otomatis dibuat</strong>.
 </div>
 
 <!-- Upload Form -->
 <div class="card card-custom" style="max-width: 600px;">
     <div class="card-body">
-        <form method="POST" action="{{ route('admin.import-anggota.process') }}" enctype="multipart/form-data" id="importForm">
+        <form method="POST" action="{{ route('admin.import-karyawan.process') }}" enctype="multipart/form-data" id="importForm">
             @csrf
 
             <!-- Drag & Drop Zone -->
@@ -66,16 +52,7 @@
                 </div>
             </div>
 
-            <!-- Option: Create Account -->
-            <div class="mb-3">
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" name="buat_akun" value="1" id="buatAkun">
-                    <label class="form-check-label fw-semibold" for="buatAkun">
-                        <i class="bi bi-person-badge me-1"></i>Buat akun login otomatis
-                    </label>
-                    <div class="form-text">Memerlukan kolom USERNAME dan PASSWORD di file Excel.</div>
-                </div>
-            </div>
+        
 
             @if($errors->any())
             <div class="alert alert-danger py-2 mb-3">

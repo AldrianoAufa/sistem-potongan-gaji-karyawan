@@ -26,8 +26,8 @@
                     <i class="bi bi-people-fill"></i>
                 </div>
                 <div>
-                    <div class="stat-value">{{ number_format($totalAnggota) }}</div>
-                    <div class="stat-label">Total Anggota</div>
+                    <div class="stat-value">{{ number_format($totalkaryawan) }}</div>
+                    <div class="stat-label">Total karyawan</div>
                 </div>
             </div>
         </div>
@@ -102,7 +102,7 @@
                             <tr>
                                 <th>No</th>
                                 <th>Kode</th>
-                                <th>Nama Anggota</th>
+                                <th>Nama karyawan</th>
                                 <th>Jenis Potongan</th>
                                 <th>Bulan/Tahun</th>
                                 <th class="text-end">Jumlah</th>
@@ -112,8 +112,8 @@
                             @forelse($potonganTerbaru as $i => $item)
                             <tr>
                                 <td>{{ $i + 1 }}</td>
-                                <td><span class="badge bg-light text-dark">{{ $item->anggota->kode_anggota }}</span></td>
-                                <td>{{ $item->anggota->nama }}</td>
+                                <td><span class="badge bg-light text-dark">{{ $item->karyawan->kode_karyawan }}</span></td>
+                                <td>{{ $item->karyawan->nama }}</td>
                                 <td>{{ $item->jenisPotongan->nama_potongan }}</td>
                                 <td>{{ $item->nama_bulan }} {{ $item->tahun }}</td>
                                 <td class="text-end fw-semibold">Rp {{ number_format($item->jumlah_potongan, 0, ',', '.') }}</td>

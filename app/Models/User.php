@@ -14,7 +14,7 @@ class User extends Authenticatable
         'username',
         'password',
         'role',
-        'anggota_id',
+        'karyawan_id',
     ];
 
     protected $hidden = [
@@ -29,9 +29,9 @@ class User extends Authenticatable
         ];
     }
 
-    public function anggota()
+    public function karyawan()
     {
-        return $this->belongsTo(Anggota::class);
+        return $this->belongsTo(karyawan::class);
     }
 
     public function isAdmin(): bool

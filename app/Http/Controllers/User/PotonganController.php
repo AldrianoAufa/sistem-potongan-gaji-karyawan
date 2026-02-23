@@ -12,18 +12,18 @@ class PotonganController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $anggota = $user->anggota;
+        $karyawan = $user->karyawan;
 
-        if (!$anggota) {
+        if (!$karyawan) {
             return view('user.potongan.index', [
                 'potongan' => collect(),
                 'jenisPotonganList' => collect(),
             ]);
         }
 
-        // Row-level security: only show records for this anggota
+        // Row-level security: only show records for this karyawan
         $query = InputBulanan::with('jenisPotongan')
-            ->where('anggota_id', $anggota->id);
+            ->where('karyawan_id', $karyawan->id);
 
         if ($request->filled('bulan')) {
             $query->where('bulan', $request->bulan);
@@ -50,11 +50,11 @@ class PotonganController extends Controller
         $user = auth()->user();
 
         // Row-level security: ensure user can only see their own data
-        if (!$user->anggota || $inputBulanan->anggota_id !== $user->anggota->id) {
+        if (!$user->karyawan || $inputBulanan->karyawan_id !== $user->karyawan->id) {
             abort(403, 'Anda tidak memiliki akses ke data ini.');
         }
 
-        $inputBulanan->load(['anggota', 'jenisPotongan']);
+        $inputBulanan->load(['karyawan', 'jenisPotongan']);
 
         return view('user.potongan.show', compact('inputBulanan'));
     }

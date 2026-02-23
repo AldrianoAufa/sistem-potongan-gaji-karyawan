@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Anggota;
+use App\Models\karyawan;
 use App\Models\InputBulanan;
 use App\Models\JenisPotongan;
 use Illuminate\Http\Request;
@@ -12,7 +12,7 @@ class InputBulananController extends Controller
 {
     public function index(Request $request)
     {
-        $query = InputBulanan::with(['anggota', 'jenisPotongan']);
+        $query = InputBulanan::with(['karyawan', 'jenisPotongan']);
 
         if ($request->filled('bulan')) {
             $query->where('bulan', $request->bulan);
@@ -22,8 +22,8 @@ class InputBulananController extends Controller
         }
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('anggota', function ($q) use ($search) {
-                $q->where('kode_anggota', 'like', "%{$search}%")
+            $query->whereHas('karyawan', function ($q) use ($search) {
+                $q->where('kode_karyawan', 'like', "%{$search}%")
                   ->orWhere('nama', 'like', "%{$search}%");
             });
         }
@@ -33,18 +33,18 @@ class InputBulananController extends Controller
 
         $totalPotongan = $query->sum('jumlah_potongan');
 
-        $anggotaList = Anggota::orderBy('nama')->get();
+        $karyawanList = karyawan::orderBy('nama')->get();
         $jenisPotonganList = JenisPotongan::orderBy('nama_potongan')->get();
 
         return view('admin.input-bulanan.index', compact(
-            'inputBulanan', 'totalPotongan', 'anggotaList', 'jenisPotonganList'
+            'inputBulanan', 'totalPotongan', 'karyawanList', 'jenisPotonganList'
         ));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'anggota_id' => 'required|exists:anggota,id',
+            'karyawan_id' => 'required|exists:karyawan,id',
             'jenis_potongan_id' => 'required|exists:jenis_potongan,id',
             'bulan' => 'required|integer|between:1,12',
             'tahun' => 'required|integer|min:2020|max:2099',
@@ -73,16 +73,16 @@ class InputBulananController extends Controller
 
     public function edit(InputBulanan $inputBulanan)
     {
-        $anggotaList = Anggota::orderBy('nama')->get();
+        $karyawanList = karyawan::orderBy('nama')->get();
         $jenisPotonganList = JenisPotongan::orderBy('nama_potongan')->get();
 
-        return view('admin.input-bulanan.edit', compact('inputBulanan', 'anggotaList', 'jenisPotonganList'));
+        return view('admin.input-bulanan.edit', compact('inputBulanan', 'karyawanList', 'jenisPotonganList'));
     }
 
     public function update(Request $request, InputBulanan $inputBulanan)
     {
         $validated = $request->validate([
-            'anggota_id' => 'required|exists:anggota,id',
+            'karyawan_id' => 'required|exists:karyawan,id',
             'jenis_potongan_id' => 'required|exists:jenis_potongan,id',
             'bulan' => 'required|integer|between:1,12',
             'tahun' => 'required|integer|min:2020|max:2099',
@@ -106,6 +106,64 @@ class InputBulananController extends Controller
 
         return redirect()->route('admin.input-bulanan.index')
             ->with('success', 'Data potongan bulanan berhasil diperbarui.');
+    }
+
+    public function create(Request $request)
+    {
+        $jenisPotonganId = $request->query('jenis_potongan_id');
+        $selectedPotongan = null;
+        $karyawanList = [];
+
+        if ($jenisPotonganId) {
+            $selectedPotongan = JenisPotongan::findOrFail($jenisPotonganId);
+            $karyawanList = karyawan::whereHas('potongan', function($q) use ($jenisPotonganId) {
+                $q->where('jenis_potongan_id', $jenisPotonganId);
+            })->orderBy('nama')->get();
+        }
+
+        $jenisPotonganAll = JenisPotongan::orderBy('nama_potongan')->get();
+        $bulanOptions = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+
+        return view('admin.input-bulanan.create', compact(
+            'jenisPotonganAll', 'selectedPotongan', 'karyawanList', 'bulanOptions'
+        ));
+    }
+
+    public function bulkStore(Request $request)
+    {
+        $validated = $request->validate([
+            'jenis_potongan_id' => 'required|exists:jenis_potongan,id',
+            'bulan' => 'required|integer|between:1,12',
+            'tahun' => 'required|integer|min:2020|max:2099',
+            'potongan' => 'required|array',
+            'potongan.*.karyawan_id' => 'required|exists:karyawan,id',
+            'potongan.*.jumlah' => 'nullable|numeric|min:0',
+        ]);
+
+        $count = 0;
+        foreach ($validated['potongan'] as $item) {
+            if ($item['jumlah'] !== null && $item['jumlah'] > 0) {
+                InputBulanan::updateOrCreate(
+                    [
+                        'karyawan_id' => $item['karyawan_id'],
+                        'jenis_potongan_id' => $validated['jenis_potongan_id'],
+                        'bulan' => $validated['bulan'],
+                        'tahun' => $validated['tahun'],
+                    ],
+                    [
+                        'jumlah_potongan' => $item['jumlah'],
+                    ]
+                );
+                $count++;
+            }
+        }
+
+        return redirect()->route('admin.input-bulanan.index')
+            ->with('success', $count . ' data potongan berhasil disimpan secara kolektif.');
     }
 
     public function destroy(InputBulanan $inputBulanan)

@@ -18,11 +18,11 @@
             @csrf @method('PUT')
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold">Anggota <span class="text-danger">*</span></label>
-                    <select name="anggota_id" class="form-select" required>
-                        @foreach($anggotaList as $a)
-                        <option value="{{ $a->id }}" {{ $inputBulanan->anggota_id == $a->id ? 'selected' : '' }}>
-                            {{ $a->kode_anggota }} — {{ $a->nama }}
+                    <label class="form-label fw-semibold">karyawan <span class="text-danger">*</span></label>
+                    <select name="karyawan_id" class="form-select" required>
+                        @foreach($karyawanList as $a)
+                        <option value="{{ $a->id }}" {{ $inputBulanan->karyawan_id == $a->id ? 'selected' : '' }}>
+                            {{ $a->kode_karyawan }} — {{ $a->nama }}
                         </option>
                         @endforeach
                     </select>

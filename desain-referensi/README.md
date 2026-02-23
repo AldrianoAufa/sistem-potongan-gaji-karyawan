@@ -12,7 +12,7 @@ desain-referensi/
 ├── halaman/
 │   ├── 01-login.md
 │   ├── 02-admin-dashboard.md
-│   ├── 03-admin-anggota.md
+│   ├── 03-admin-karyawan.md
 │   ├── 04-admin-jabatan.md
 │   ├── 05-admin-jenis-potongan.md
 │   ├── 06-admin-input-bulanan.md

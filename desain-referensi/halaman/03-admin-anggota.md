@@ -1,4 +1,4 @@
-# 👥 Admin — Kelola Anggota
+# 👥 Admin — Kelola karyawan
 
 ## Layout
 - Sidebar kiri + konten utama (sama seperti dashboard)
@@ -7,9 +7,9 @@
 
 ```
 ┌──────┬──────────────────────────────────────┐
-│ SIDE │  Kelola Anggota                      │
+│ SIDE │  Kelola karyawan                      │
 │ BAR  │──────────────────────────────────────│
-│      │  [+ Tambah Anggota]    🔍[Search...] │
+│      │  [+ Tambah karyawan]    🔍[Search...] │
 │      │                                      │
 │      │  ┌────┬──────┬──────┬──────┬───────┐ │
 │      │  │No  │Kode  │Nama  │Jaba- │Aksi   │ │
@@ -28,15 +28,15 @@
 
 ```
 ┌─────────────────────────────────┐
-│  ✕  Tambah Anggota              │
+│  ✕  Tambah karyawan              │
 │─────────────────────────────────│
 │                                 │
-│  Kode Anggota *                 │
+│  NIK *                 │
 │  ┌─────────────────────────┐    │
 │  │ C004                    │    │
 │  └─────────────────────────┘    │
 │                                 │
-│  Nama Anggota *                 │
+│  Nama karyawan *                 │
 │  ┌─────────────────────────┐    │
 │  │ Nama Lengkap            │    │
 │  └─────────────────────────┘    │

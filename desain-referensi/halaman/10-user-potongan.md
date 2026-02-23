@@ -64,8 +64,8 @@
 - **Pagination:** di bawah tabel
 
 ## Row-Level Security
-- Query HANYA menampilkan data milik anggota yang sedang login
-- Tidak ada cara untuk melihat data anggota lain
+- Query HANYA menampilkan data milik karyawan yang sedang login
+- Tidak ada cara untuk melihat data karyawan lain
 
 ## Responsif
 - Filter: stack vertical di mobile

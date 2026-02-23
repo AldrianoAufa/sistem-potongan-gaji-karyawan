@@ -17,9 +17,9 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('anggota', function (Blueprint $table) {
+        Schema::create('karyawan', function (Blueprint $table) {
             $table->id();
-            $table->string('kode_anggota')->unique();
+            $table->string('kode_karyawan')->unique();
             $table->string('nama');
             $table->foreignId('jabatan_id')->constrained('jabatan')->onDelete('restrict');
             $table->timestamps();
@@ -30,7 +30,7 @@ return new class extends Migration
             $table->string('username')->unique();
             $table->string('password');
             $table->enum('role', ['admin', 'user'])->default('user');
-            $table->foreignId('anggota_id')->nullable()->constrained('anggota')->onDelete('set null');
+            $table->foreignId('karyawan_id')->nullable()->constrained('karyawan')->onDelete('set null');
             $table->rememberToken();
             $table->timestamps();
         });
@@ -44,7 +44,7 @@ return new class extends Migration
 
         Schema::create('input_bulanan', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('anggota_id')->constrained('anggota')->onDelete('cascade');
+            $table->foreignId('karyawan_id')->constrained('karyawan')->onDelete('cascade');
             $table->foreignId('jenis_potongan_id')->constrained('jenis_potongan')->onDelete('restrict');
             $table->tinyInteger('bulan'); // 1-12
             $table->year('tahun');
@@ -52,7 +52,7 @@ return new class extends Migration
             $table->json('data_rinci')->nullable(); // JSON: PINJ, AWAL, BULN, KALI, PKOK, RPBG, SALD
             $table->timestamps();
 
-            $table->index(['anggota_id', 'bulan', 'tahun']);
+            $table->index(['karyawan_id', 'bulan', 'tahun']);
             $table->index(['jenis_potongan_id', 'bulan', 'tahun']);
         });
 
@@ -82,7 +82,7 @@ return new class extends Migration
         Schema::dropIfExists('input_bulanan');
         Schema::dropIfExists('jenis_potongan');
         Schema::dropIfExists('users');
-        Schema::dropIfExists('anggota');
+        Schema::dropIfExists('karyawan');
         Schema::dropIfExists('jabatan');
     }
 };

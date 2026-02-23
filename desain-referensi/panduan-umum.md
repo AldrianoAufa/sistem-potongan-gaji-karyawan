@@ -44,7 +44,7 @@
 - Item menu dengan ikon (gunakan Bootstrap Icons)
 - Menu items:
   - 📊 Dashboard
-  - 👥 Anggota
+  - 👥 karyawan
   - 🏢 Jabatan
   - 📋 Jenis Potongan
   - 💰 Input Bulanan

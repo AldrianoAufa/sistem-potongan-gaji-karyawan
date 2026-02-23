@@ -2,7 +2,7 @@
 
 ## Layout
 - **Tipe:** Navbar top + konten full-width (tanpa sidebar)
-- **Navbar:** Logo, nama anggota, dropdown (Profil, Logout)
+- **Navbar:** Logo, nama karyawan, dropdown (Profil, Logout)
 - **Warna:** lebih cerah/friendly daripada admin
 
 ## Wireframe
@@ -13,7 +13,7 @@
 │──────────────────────────────────────────────│
 │                                              │
 │  Selamat Datang, Ahmad! 👋                   │
-│  Kode Anggota: C001 | Jabatan: Staff         │
+│  NIK: C001 | Jabatan: Staff         │
 │                                              │
 │  ┌──────────────┐  ┌──────────────┐          │
 │  │ 💰           │  │ 📋           │          │
@@ -53,7 +53,7 @@
 ```
 
 ## Komponen
-- **Greeting card:** Nama anggota, kode, jabatan
+- **Greeting card:** Nama karyawan, kode, jabatan
 - **Card Stats (2 buah):**
   - Total potongan bulan ini (Rp)
   - Jumlah jenis potongan aktif

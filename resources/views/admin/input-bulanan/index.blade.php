@@ -5,6 +5,9 @@
 <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
     <h4><i class="bi bi-cash-coin me-2"></i>Input Potongan Bulanan</h4>
     <div class="d-flex gap-2">
+        <a href="{{ route('admin.input-bulanan.create') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-collection-fill me-1"></i>Input Kolektif
+        </a>
         <a href="{{ route('admin.import.form') }}" class="btn btn-success btn-sm">
             <i class="bi bi-file-earmark-excel me-1"></i>Import Excel
         </a>
@@ -57,7 +60,7 @@
                     <tr>
                         <th>No</th>
                         <th>Kode</th>
-                        <th>Nama Anggota</th>
+                        <th>Nama karyawan</th>
                         <th>Jenis Potongan</th>
                         <th>Bulan/Tahun</th>
                         <th class="text-end">Jumlah</th>
@@ -68,8 +71,8 @@
                     @forelse($inputBulanan as $i => $item)
                     <tr>
                         <td>{{ $inputBulanan->firstItem() + $i }}</td>
-                        <td><span class="badge bg-light text-dark">{{ $item->anggota->kode_anggota }}</span></td>
-                        <td>{{ $item->anggota->nama }}</td>
+                        <td><span class="badge bg-light text-dark">{{ $item->karyawan->kode_karyawan }}</span></td>
+                        <td>{{ $item->karyawan->nama }}</td>
                         <td><span class="badge bg-primary">{{ $item->jenisPotongan->kode_potongan }}</span> {{ $item->jenisPotongan->nama_potongan }}</td>
                         <td>{{ $item->nama_bulan }} {{ $item->tahun }}</td>
                         <td class="text-end fw-semibold">Rp {{ number_format($item->jumlah_potongan, 0, ',', '.') }}</td>
@@ -116,11 +119,11 @@
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Anggota <span class="text-danger">*</span></label>
-                            <select name="anggota_id" class="form-select" required>
-                                <option value="">-- Pilih Anggota --</option>
-                                @foreach($anggotaList as $a)
-                                <option value="{{ $a->id }}">{{ $a->kode_anggota }} — {{ $a->nama }}</option>
+                            <label class="form-label fw-semibold">karyawan <span class="text-danger">*</span></label>
+                            <select name="karyawan_id" class="form-select" required>
+                                <option value="">-- Pilih karyawan --</option>
+                                @foreach($karyawanList as $a)
+                                <option value="{{ $a->id }}">{{ $a->kode_karyawan }} — {{ $a->nama }}</option>
                                 @endforeach
                             </select>
                         </div>

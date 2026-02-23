@@ -12,7 +12,7 @@
 │      │  [+ Tambah]  [📤 Import Excel]       │
 │      │                                      │
 │      │  Filter: Bulan [▼ Jan] Tahun [▼ 2026]│
-│      │  🔍 [Cari nama/kode anggota...]      │
+│      │  🔍 [Cari nama/NIK...]      │
 │      │                                      │
 │      │  ┌───┬──────┬──────┬──────┬────┬───┐ │
 │      │  │No │Kode  │Nama  │Jenis │Jml │Aks│ │
@@ -34,9 +34,9 @@
 │  ✕  Tambah Potongan Bulanan     │
 │─────────────────────────────────│
 │                                 │
-│  Anggota *                      │
+│  karyawan *                      │
 │  ┌─────────────────────────┐    │
-│  │ 🔍 Cari anggota...      │    │  ← searchable select
+│  │ 🔍 Cari karyawan...      │    │  ← searchable select
 │  └─────────────────────────┘    │
 │                                 │
 │  Jenis Potongan *               │
@@ -80,7 +80,7 @@
 - **Search:** autocomplete atau filter oleh nama/kode
 - **Tabel:** menampilkan total di bawah
 - **Form:** 
-  - Anggota: searchable select (select2 style)
+  - karyawan: searchable select (select2 style)
   - Detail pinjaman: collapsible section, hanya muncul jika jenis potongan = pinjaman
   - Validasi: jumlah harus > 0, bulan/tahun required
 - **Tombol Import:** link ke halaman import Excel

@@ -10,7 +10,7 @@ class JabatanController extends Controller
 {
     public function index()
     {
-        $jabatan = Jabatan::withCount('anggota')->orderBy('nama_jabatan')->paginate(15);
+        $jabatan = Jabatan::withCount('karyawan')->orderBy('nama_jabatan')->paginate(15);
         return view('admin.jabatan.index', compact('jabatan'));
     }
 
@@ -40,8 +40,8 @@ class JabatanController extends Controller
 
     public function destroy(Jabatan $jabatan)
     {
-        if ($jabatan->anggota()->count() > 0) {
-            return back()->with('error', 'Tidak dapat menghapus jabatan yang masih memiliki anggota.');
+        if ($jabatan->karyawan()->count() > 0) {
+            return back()->with('error', 'Tidak dapat menghapus jabatan yang masih memiliki karyawan.');
         }
 
         $jabatan->delete();

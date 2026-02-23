@@ -40,12 +40,12 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <label class="form-label mb-0" style="font-size: 0.8rem;">Anggota</label>
-                <select name="anggota_id" class="form-select form-select-sm">
+                <label class="form-label mb-0" style="font-size: 0.8rem;">karyawan</label>
+                <select name="karyawan_id" class="form-select form-select-sm">
                     <option value="">Semua</option>
-                    @foreach($anggotaList as $a)
-                    <option value="{{ $a->id }}" {{ request('anggota_id') == $a->id ? 'selected' : '' }}>
-                        {{ $a->kode_anggota }} — {{ $a->nama }}
+                    @foreach($karyawanList as $a)
+                    <option value="{{ $a->id }}" {{ request('karyawan_id') == $a->id ? 'selected' : '' }}>
+                        {{ $a->kode_karyawan }} — {{ $a->nama }}
                     </option>
                     @endforeach
                 </select>
@@ -87,8 +87,8 @@
                             @forelse($laporan as $i => $item)
                             <tr>
                                 <td>{{ $laporan->firstItem() + $i }}</td>
-                                <td><span class="badge bg-light text-dark">{{ $item->anggota->kode_anggota }}</span></td>
-                                <td>{{ $item->anggota->nama }}</td>
+                                <td><span class="badge bg-light text-dark">{{ $item->karyawan->kode_karyawan }}</span></td>
+                                <td>{{ $item->karyawan->nama }}</td>
                                 <td><span class="badge bg-primary">{{ $item->jenisPotongan->kode_potongan }}</span></td>
                                 <td>{{ $item->nama_bulan }} {{ $item->tahun }}</td>
                                 <td class="text-end fw-semibold">Rp {{ number_format($item->jumlah_potongan, 0, ',', '.') }}</td>

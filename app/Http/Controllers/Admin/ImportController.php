@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Anggota;
+use App\Models\karyawan;
 use App\Models\InputBulanan;
 use App\Models\JenisPotongan;
 use Illuminate\Http\Request;
@@ -61,8 +61,8 @@ class ImportController extends Controller
         // Map header positions
         $headerMap = array_flip($headers);
 
-        // Cache anggota and jenis potongan
-        $anggotaMap = Anggota::pluck('id', 'kode_anggota')->toArray();
+        // Cache karyawan and jenis potongan
+        $karyawanMap = karyawan::pluck('id', 'kode_karyawan')->toArray();
         $jenisPotonganMap = JenisPotongan::pluck('id', 'kode_potongan')->toArray();
 
         $berhasil = 0;
@@ -87,13 +87,13 @@ class ImportController extends Controller
 
                 // Validasi CUST
                 if (empty($cust)) {
-                    $errors[] = ['baris' => $rowNum, 'kode' => $cust, 'error' => 'Kode anggota (CUST) kosong'];
+                    $errors[] = ['baris' => $rowNum, 'kode' => $cust, 'error' => 'NIK (CUST) kosong'];
                     $gagal++;
                     continue;
                 }
 
-                if (!isset($anggotaMap[$cust])) {
-                    $errors[] = ['baris' => $rowNum, 'kode' => $cust, 'error' => 'Kode anggota tidak ditemukan'];
+                if (!isset($karyawanMap[$cust])) {
+                    $errors[] = ['baris' => $rowNum, 'kode' => $cust, 'error' => 'NIK tidak ditemukan'];
                     $gagal++;
                     continue;
                 }
@@ -144,7 +144,7 @@ class ImportController extends Controller
                 }
 
                 InputBulanan::create([
-                    'anggota_id' => $anggotaMap[$cust],
+                    'karyawan_id' => $karyawanMap[$cust],
                     'jenis_potongan_id' => $jenisPotonganMap[$grup],
                     'bulan' => $bulan,
                     'tahun' => $tahun,

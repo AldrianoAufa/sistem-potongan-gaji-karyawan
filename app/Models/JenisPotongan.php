@@ -17,4 +17,9 @@ class JenisPotongan extends Model
     {
         return $this->hasMany(InputBulanan::class);
     }
+
+    public function karyawan()
+    {
+        return $this->belongsToMany(karyawan::class, 'karyawan_potongan', 'jenis_potongan_id', 'karyawan_id');
+    }
 }

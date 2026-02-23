@@ -3,13 +3,14 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
-use App\Http\Controllers\Admin\AnggotaController;
+use App\Http\Controllers\Admin\karyawanController;
 use App\Http\Controllers\Admin\JabatanController;
 use App\Http\Controllers\Admin\JenisPotonganController;
 use App\Http\Controllers\Admin\InputBulananController;
 use App\Http\Controllers\Admin\ImportController;
-use App\Http\Controllers\Admin\ImportAnggotaController;
+use App\Http\Controllers\Admin\ImportkaryawanController;
 use App\Http\Controllers\Admin\LaporanController;
+use App\Http\Controllers\Admin\DepartemenController;
 use App\Http\Controllers\User\DashboardController as UserDashboard;
 use App\Http\Controllers\User\PotonganController;
 
@@ -27,16 +28,20 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
 
-    Route::resource('anggota', AnggotaController::class)->except(['show']);
+    Route::resource('karyawan', karyawanController::class)->except(['show']);
+    Route::get('karyawan-mapping', [karyawanController::class, 'mapping'])->name('karyawan.mapping');
+    Route::post('karyawan-mapping/{karyawan}', [karyawanController::class, 'updateMapping'])->name('karyawan.mapping.update');
     Route::resource('jabatan', JabatanController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('departemen', DepartemenController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
     Route::resource('jenis-potongan', JenisPotonganController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('input-bulanan', InputBulananController::class)->except(['show', 'create']);
+    Route::resource('input-bulanan', InputBulananController::class)->except(['show']);
+    Route::post('input-bulanan-bulk', [InputBulananController::class, 'bulkStore'])->name('input-bulanan.bulk-store');
 
     Route::get('/import', [ImportController::class, 'showForm'])->name('import.form');
     Route::post('/import', [ImportController::class, 'process'])->name('import.process');
 
-    Route::get('/import-anggota', [ImportAnggotaController::class, 'showForm'])->name('import-anggota.form');
-    Route::post('/import-anggota', [ImportAnggotaController::class, 'process'])->name('import-anggota.process');
+    Route::get('/import-karyawan', [ImportkaryawanController::class, 'showForm'])->name('import-karyawan.form');
+    Route::post('/import-karyawan', [ImportkaryawanController::class, 'process'])->name('import-karyawan.process');
 
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
 });

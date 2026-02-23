@@ -44,4 +44,4 @@
 - Halaman sederhana karena hanya 1 field (nama_jabatan)
 - CRUD via modal untuk efisiensi
 - Validasi: nama_jabatan required, unique
-- Hapus: konfirmasi modal, cek apakah ada anggota terkait
+- Hapus: konfirmasi modal, cek apakah ada karyawan terkait

@@ -5,13 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Jabatan extends Model
+class Departemen extends Model
 {
     use HasFactory;
 
-    protected $table = 'jabatan';
+    protected $table = 'departemen';
 
-    protected $fillable = ['nama_jabatan'];
+    protected $fillable = ['kode_departemen', 'nama_departemen'];
 
     public function karyawan()
     {

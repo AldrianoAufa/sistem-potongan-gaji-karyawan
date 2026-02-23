@@ -67,7 +67,7 @@
 │      │  │  ┌────┬──────┬──────────────────┐ ││
 │      │  │  │Brs │Kode  │Keterangan Error  │ ││
 │      │  │  ├────┼──────┼──────────────────┤ ││
-│      │  │  │23  │X999  │Kode anggota      │ ││
+│      │  │  │23  │X999  │NIK      │ ││
 │      │  │  │    │      │tidak ditemukan   │ ││
 │      │  │  │45  │C001  │Jumlah angsuran   │ ││
 │      │  │  │    │      │bukan angka       │ ││
@@ -88,7 +88,7 @@
 - **Validasi:**
   - Cek format file (.xlsx, .xls)
   - Cek header kolom persis sesuai spesifikasi
-  - Cek CUST ada di tabel anggota
+  - Cek CUST ada di tabel karyawan
   - Cek GRUP ada di tabel jenis_potongan
   - Cek field numerik valid (PINJ, AWAL, ANGS, dll)
 

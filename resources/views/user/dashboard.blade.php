@@ -3,19 +3,19 @@
 
 @section('content')
 <div class="page-header mb-4">
-    <h4><i class="bi bi-house-fill me-2"></i>Selamat Datang, {{ $anggota->nama ?? auth()->user()->username }}</h4>
-    @if($anggota)
+    <h4><i class="bi bi-house-fill me-2"></i>Selamat Datang, {{ $karyawan->nama ?? auth()->user()->username }}</h4>
+    @if($karyawan)
     <p class="text-muted mb-0" style="font-size: 0.9rem;">
-        <span class="badge bg-primary me-1">{{ $anggota->kode_anggota }}</span>
-        {{ $anggota->jabatan->nama_jabatan ?? '-' }}
+        <span class="badge bg-primary me-1">{{ $karyawan->kode_karyawan }}</span>
+        {{ $karyawan->jabatan->nama_jabatan ?? '-' }}
     </p>
     @endif
 </div>
 
-@if(!$anggota)
+@if(!$karyawan)
 <div class="alert alert-warning">
     <i class="bi bi-exclamation-triangle me-2"></i>
-    Akun Anda belum terhubung dengan data anggota. Silakan hubungi administrator.
+    Akun Anda belum terhubung dengan data karyawan. Silakan hubungi administrator.
 </div>
 @else
 
@@ -118,7 +118,7 @@
 @endsection
 
 @push('scripts')
-@if($anggota)
+@if($karyawan)
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
     const ctx = document.getElementById('chartUser').getContext('2d');

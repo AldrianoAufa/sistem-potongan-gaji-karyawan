@@ -14,7 +14,7 @@
 │      │  │ Filter Laporan                    ││
 │      │  │                                   ││
 │      │  │ Bulan [▼ Semua]  Tahun [▼ 2026]   ││
-│      │  │ Jenis [▼ Semua]  Anggota [🔍...]  ││
+│      │  │ Jenis [▼ Semua]  karyawan [🔍...]  ││
 │      │  │                                   ││
 │      │  │ [🔍 Tampilkan]  [📥 Export Excel]  ││
 │      │  └───────────────────────────────────┘│
@@ -46,7 +46,7 @@
 
 ## Komponen
 - **Filter Bar:** card dengan dropdowns + tombol tampilkan & export
-- **Summary:** total rupiah, jumlah anggota terfilter
+- **Summary:** total rupiah, jumlah karyawan terfilter
 - **Tabel Detail:** semua data potongan sesuai filter, paginated
 - **Ringkasan per Jenis:** breakdown total per jenis potongan, dengan persentase
 - **Export Excel:** download file Excel sesuai filter aktif

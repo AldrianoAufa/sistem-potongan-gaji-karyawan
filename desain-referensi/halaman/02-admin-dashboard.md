@@ -49,7 +49,7 @@
 ### Card Statistik (4 buah, horizontal)
 | Card | Ikon | Label | Warna |
 |---|---|---|---|
-| 1 | 👥 | Total Anggota | Primary |
+| 1 | 👥 | Total karyawan | Primary |
 | 2 | 💰 | Total Potongan Bulan Ini | Success |
 | 3 | 📋 | Jenis Potongan | Info |
 | 4 | 🏢 | Total Jabatan | Warning |
@@ -61,7 +61,7 @@
 
 ### Tabel Potongan Terbaru
 - 5-10 data terbaru
-- Kolom: No, Nama Anggota, Jenis Potongan, Jumlah, Bulan/Tahun
+- Kolom: No, Nama karyawan, Jenis Potongan, Jumlah, Bulan/Tahun
 - Link "Lihat Semua" ke halaman laporan
 
 ## Responsif

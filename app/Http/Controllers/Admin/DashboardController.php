@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Anggota;
+use App\Models\karyawan;
 use App\Models\InputBulanan;
 use App\Models\Jabatan;
 use App\Models\JenisPotongan;
@@ -13,7 +13,7 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $totalAnggota = Anggota::count();
+        $totalkaryawan = karyawan::count();
         $totalJabatan = Jabatan::count();
         $totalJenisPotongan = JenisPotongan::count();
 
@@ -44,13 +44,13 @@ class DashboardController extends Controller
         }
 
         // Potongan terbaru
-        $potonganTerbaru = InputBulanan::with(['anggota', 'jenisPotongan'])
+        $potonganTerbaru = InputBulanan::with(['karyawan', 'jenisPotongan'])
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
 
         return view('admin.dashboard', compact(
-            'totalAnggota',
+            'totalkaryawan',
             'totalJabatan',
             'totalJenisPotongan',
             'totalPotonganBulanIni',

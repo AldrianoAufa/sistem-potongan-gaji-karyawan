@@ -12,7 +12,7 @@ class InputBulanan extends Model
     protected $table = 'input_bulanan';
 
     protected $fillable = [
-        'anggota_id',
+        'karyawan_id',
         'jenis_potongan_id',
         'bulan',
         'tahun',
@@ -25,9 +25,9 @@ class InputBulanan extends Model
         'jumlah_potongan' => 'decimal:2',
     ];
 
-    public function anggota()
+    public function karyawan()
     {
-        return $this->belongsTo(Anggota::class);
+        return $this->belongsTo(karyawan::class);
     }
 
     public function jenisPotongan()

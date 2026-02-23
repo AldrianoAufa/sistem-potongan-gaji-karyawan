@@ -10,11 +10,11 @@ class DashboardController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $anggota = $user->anggota;
+        $karyawan = $user->karyawan;
 
-        if (!$anggota) {
+        if (!$karyawan) {
             return view('user.dashboard', [
-                'anggota' => null,
+                'karyawan' => null,
                 'totalPotonganBulanIni' => 0,
                 'jenisPotonganAktif' => 0,
                 'potonganBulanIni' => collect(),
@@ -26,7 +26,7 @@ class DashboardController extends Controller
         $tahunIni = now()->year;
 
         $potonganBulanIni = InputBulanan::with('jenisPotongan')
-            ->where('anggota_id', $anggota->id)
+            ->where('karyawan_id', $karyawan->id)
             ->where('bulan', $bulanIni)
             ->where('tahun', $tahunIni)
             ->get();
@@ -45,7 +45,7 @@ class DashboardController extends Controller
             $bulan = $date->month;
             $tahun = $date->year;
 
-            $total = InputBulanan::where('anggota_id', $anggota->id)
+            $total = InputBulanan::where('karyawan_id', $karyawan->id)
                 ->where('bulan', $bulan)
                 ->where('tahun', $tahun)
                 ->sum('jumlah_potongan');
@@ -57,7 +57,7 @@ class DashboardController extends Controller
         }
 
         return view('user.dashboard', compact(
-            'anggota', 'totalPotonganBulanIni', 'jenisPotonganAktif',
+            'karyawan', 'totalPotonganBulanIni', 'jenisPotonganAktif',
             'potonganBulanIni', 'grafikData'
         ));
     }
