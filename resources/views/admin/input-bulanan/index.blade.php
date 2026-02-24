@@ -1,17 +1,10 @@
 @extends('layouts.admin')
-@section('title', 'Input Potongan Bulanan')
+@section('title', 'Data Potongan')
 
 @section('content')
 <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-    <h4><i class="bi bi-cash-coin me-2"></i>Input Potongan Bulanan</h4>
-    <div class="d-flex gap-2">
-        <a href="{{ route('admin.input-bulanan.create') }}" class="btn btn-primary btn-sm">
-            <i class="bi bi-collection-fill me-1"></i>Input Kolektif
-        </a>
-        <a href="{{ route('admin.import.form') }}" class="btn btn-success btn-sm">
-            <i class="bi bi-file-earmark-excel me-1"></i>Import Excel
-        </a>
-    </div>
+    <h4><i class="bi bi-cash-coin me-2"></i>Data Potongan</h4>
+    
 </div>
 
 <!-- Filter -->

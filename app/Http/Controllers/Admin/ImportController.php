@@ -17,13 +17,36 @@ class ImportController extends Controller
         'PINJ', 'AWAL', 'BULN', 'KALI', 'PKOK', 'RPBG', 'ANGS', 'SALD'
     ];
 
-    public function showForm()
+    public function showForm(Request $request)
     {
         $departemenList = \App\Models\Departemen::with(['karyawan' => function ($q) {
             $q->orderBy('nama')->with('jabatan');
         }])->withCount('karyawan')->orderBy('nama_departemen')->get();
 
-        return view('admin.import.index', compact('departemenList'));
+        // Data untuk input kolektif
+        $jenisPotonganAll = JenisPotongan::orderBy('nama_potongan')->get();
+        $bulanOptions = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+
+        // Jika jenis potongan dipilih, load karyawan yang terdaftar
+        $selectedPotongan = null;
+        $karyawanKolektif = collect();
+        if ($request->filled('jenis_potongan_id')) {
+            $selectedPotongan = JenisPotongan::find($request->jenis_potongan_id);
+            if ($selectedPotongan) {
+                $karyawanKolektif = karyawan::whereHas('potongan', function($q) use ($request) {
+                    $q->where('jenis_potongan_id', $request->jenis_potongan_id);
+                })->orderBy('nama')->get();
+            }
+        }
+
+        return view('admin.import.index', compact(
+            'departemenList', 'jenisPotonganAll', 'bulanOptions',
+            'selectedPotongan', 'karyawanKolektif'
+        ));
     }
 
     public function process(Request $request)
@@ -180,5 +203,38 @@ class ImportController extends Controller
         }
 
         return view('admin.import.result', compact('berhasil', 'gagal', 'errors', 'bulan', 'tahun'));
+    }
+
+    public function collectiveStore(Request $request)
+    {
+        $validated = $request->validate([
+            'jenis_potongan_id' => 'required|exists:jenis_potongan,id',
+            'bulan' => 'required|integer|between:1,12',
+            'tahun' => 'required|integer|min:2020|max:2099',
+            'potongan' => 'required|array',
+            'potongan.*.karyawan_id' => 'required|exists:karyawan,id',
+            'potongan.*.jumlah' => 'nullable|numeric|min:0',
+        ]);
+
+        $count = 0;
+        foreach ($validated['potongan'] as $item) {
+            if ($item['jumlah'] !== null && $item['jumlah'] > 0) {
+                InputBulanan::updateOrCreate(
+                    [
+                        'karyawan_id' => $item['karyawan_id'],
+                        'jenis_potongan_id' => $validated['jenis_potongan_id'],
+                        'bulan' => $validated['bulan'],
+                        'tahun' => $validated['tahun'],
+                    ],
+                    [
+                        'jumlah_potongan' => $item['jumlah'],
+                    ]
+                );
+                $count++;
+            }
+        }
+
+        return redirect()->route('admin.import.form')
+            ->with('success', $count . ' data potongan berhasil disimpan secara kolektif.');
     }
 }

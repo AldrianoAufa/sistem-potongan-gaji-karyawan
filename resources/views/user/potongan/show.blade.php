@@ -84,11 +84,24 @@
         </div>
         @endif
 
-        <div class="mt-4">
+        <div class="mt-4 d-flex gap-2">
             <a href="{{ route('user.potongan.index') }}" class="btn btn-secondary">
                 <i class="bi bi-arrow-left me-1"></i>Kembali
             </a>
+            <button class="btn btn-outline-secondary" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i>Cetak
+            </button>
         </div>
     </div>
 </div>
+
+@push('styles')
+<style>
+    @media print {
+        .sidebar, .navbar, .breadcrumb, .btn { display: none !important; }
+        .main-content { margin-left: 0 !important; padding: 0 !important; }
+        .card-custom { border: 1px solid #ddd !important; }
+    }
+</style>
+@endpush
 @endsection

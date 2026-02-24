@@ -6,7 +6,7 @@
     <h4><i class="bi bi-pencil-square me-2"></i>Edit Potongan Bulanan</h4>
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('admin.input-bulanan.index') }}">Input Bulanan</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('admin.input-bulanan.index') }}">Data Potongan</a></li>
             <li class="breadcrumb-item active">Edit</li>
         </ol>
     </nav>

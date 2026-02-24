@@ -16,9 +16,6 @@
                     @foreach(['NIK','NAMA','JABATAN','DEPARTEMEN'] as $col)
                     <span class="badge bg-success" style="font-size: 0.8rem;">{{ $col }}</span>
                     @endforeach
-                    @foreach(['USERNAME','PASSWORD'] as $col)
-                    <span class="badge bg-secondary" style="font-size: 0.8rem;">{{ $col }} (Opsional)</span>
-                    @endforeach
                 </div>
                 <small class="text-muted">
                     <strong>NIK</strong>: Nomer Induk Karyawan | 
@@ -47,6 +44,9 @@
     <i class="bi bi-exclamation-triangle-fill me-2"></i>
     <strong>Catatan:</strong> Jika NIK sudah ada di database, data karyawan tersebut akan <strong>diperbarui</strong> (update), bukan diduplikasi.
     Jabatan yang belum ada akan <strong>otomatis dibuat</strong>.
+    <br>
+    <i class="bi bi-person-fill-lock me-2 mt-1"></i>
+    <strong>Akun login otomatis:</strong> Username dan password akan menggunakan <strong>NIK</strong> karyawan.
 </div>
 
 <!-- Upload Form -->

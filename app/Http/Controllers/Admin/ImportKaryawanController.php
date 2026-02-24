@@ -17,7 +17,6 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class ImportkaryawanController extends Controller
 {
     private const EXPECTED_HEADERS = ['NIK', 'NAMA', 'JABATAN', 'DEPARTEMEN'];
-    private const OPTIONAL_HEADERS = ['USERNAME', 'PASSWORD'];
 
     public function showForm()
     {
@@ -30,8 +29,7 @@ class ImportkaryawanController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
 
         // Headers
-        $headers = array_merge(self::EXPECTED_HEADERS, self::OPTIONAL_HEADERS);
-        foreach ($headers as $index => $header) {
+        foreach (self::EXPECTED_HEADERS as $index => $header) {
             $column = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 1);
             $sheet->setCellValue($column . '1', $header);
             $sheet->getStyle($column . '1')->getFont()->setBold(true);
@@ -42,11 +40,9 @@ class ImportkaryawanController extends Controller
         $sheet->setCellValue('B2', 'Budi Santoso');
         $sheet->setCellValue('C2', 'Staff Utama');
         $sheet->setCellValue('D2', 'IT');
-        $sheet->setCellValue('E2', 'budi123');
-        $sheet->setCellValue('F2', 'password123');
 
         // Auto size columns
-        foreach (range('A', 'F') as $col) {
+        foreach (range('A', 'D') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
@@ -100,13 +96,7 @@ class ImportkaryawanController extends Controller
             return back()->with('error', 'Header kolom tidak sesuai! Kolom yang hilang: ' . implode(', ', $missingHeaders));
         }
 
-        // Check if account columns exist when buat_akun is enabled
-        if ($buatAkun) {
-            $missingAccHeaders = array_diff(self::OPTIONAL_HEADERS, $headers);
-            if (!empty($missingAccHeaders)) {
-                return back()->with('error', 'Untuk membuat akun, kolom berikut diperlukan: ' . implode(', ', $missingAccHeaders));
-            }
-        }
+        // No need to check for username/password columns — auto-generated from NIK
 
         // Map header positions
         $headerMap = array_flip($headers);
@@ -207,27 +197,21 @@ class ImportkaryawanController extends Controller
                     $berhasil++;
                 }
 
-                // Create user account if requested and columns exist
-                if ($buatAkun && isset($headerMap['USERNAME']) && isset($headerMap['PASSWORD'])) {
-                    $username = trim($rowValues[$headerMap['USERNAME']] ?? '');
-                    $password = trim($rowValues[$headerMap['PASSWORD']] ?? '');
-
-                    if (!empty($username) && !empty($password)) {
-                        // Skip if already has account or username taken
-                        if ($karyawan->user) {
-                            // Already has account, skip
-                        } elseif (in_array($username, $existingUsernames)) {
-                            $errors[] = ['baris' => $rowNum, 'nik' => $kode, 'error' => "Username '{$username}' sudah digunakan (akun tidak dibuat, data karyawan tetap tersimpan)"];
-                        } else {
-                            User::create([
-                                'username' => $username,
-                                'password' => $password,
-                                'role' => 'user',
-                                'karyawan_id' => $karyawan->id,
-                            ]);
-                            $existingUsernames[] = $username;
-                            $akunDibuat++;
-                        }
+                // Auto-create user account using NIK as username & password
+                if ($buatAkun) {
+                    if ($karyawan->user) {
+                        // Already has account, skip
+                    } elseif (in_array($kode, $existingUsernames)) {
+                        $errors[] = ['baris' => $rowNum, 'nik' => $kode, 'error' => "Username '{$kode}' sudah digunakan (akun tidak dibuat, data karyawan tetap tersimpan)"];
+                    } else {
+                        User::create([
+                            'username' => $kode,
+                            'password' => $kode,
+                            'role' => 'user',
+                            'karyawan_id' => $karyawan->id,
+                        ]);
+                        $existingUsernames[] = $kode;
+                        $akunDibuat++;
                     }
                 }
             }

@@ -39,12 +39,15 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
 
     Route::get('/import', [ImportController::class, 'showForm'])->name('import.form');
     Route::post('/import', [ImportController::class, 'process'])->name('import.process');
+    Route::post('/import/collective', [ImportController::class, 'collectiveStore'])->name('import.collective');
 
     Route::get('/import-karyawan', [ImportkaryawanController::class, 'showForm'])->name('import-karyawan.form');
     Route::get('/import-karyawan/template', [ImportkaryawanController::class, 'downloadTemplate'])->name('import-karyawan.template');
     Route::post('/import-karyawan', [ImportkaryawanController::class, 'process'])->name('import-karyawan.process');
 
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
+    Route::get('/laporan/export', [LaporanController::class, 'exportBackup'])->name('laporan.export');
+    Route::post('/laporan/delete-old', [LaporanController::class, 'deleteOldData'])->name('laporan.delete-old');
 });
 
 // User routes

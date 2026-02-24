@@ -56,9 +56,22 @@ class DashboardController extends Controller
             ];
         }
 
+        // Pie chart data bulan ini - per jenis potongan
+        $pieChartData = [];
+        $pieColors = ['#1E3A5F','#4A90D9','#28A745','#FFC107','#DC3545','#17A2B8','#6F42C1','#FD7E14','#20C997','#E83E8C'];
+        $colorIndex = 0;
+        foreach ($potonganBulanIni as $item) {
+            $pieChartData[] = [
+                'label' => $item->jenisPotongan->nama_potongan,
+                'value' => (float) $item->jumlah_potongan,
+                'color' => $pieColors[$colorIndex % count($pieColors)],
+            ];
+            $colorIndex++;
+        }
+
         return view('user.dashboard', compact(
             'karyawan', 'totalPotonganBulanIni', 'jenisPotonganAktif',
-            'potonganBulanIni', 'grafikData'
+            'potonganBulanIni', 'grafikData', 'pieChartData'
         ));
     }
 }

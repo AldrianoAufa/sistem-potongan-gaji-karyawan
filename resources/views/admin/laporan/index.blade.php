@@ -40,7 +40,7 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <label class="form-label mb-0" style="font-size: 0.8rem;">karyawan</label>
+                <label class="form-label mb-0" style="font-size: 0.8rem;">Karyawan</label>
                 <select name="karyawan_id" class="form-select form-select-sm">
                     <option value="">Semua</option>
                     @foreach($karyawanList as $a)
@@ -108,7 +108,7 @@
 
     <!-- Summary by Type -->
     <div class="col-lg-4">
-        <div class="card card-custom">
+        <div class="card card-custom mb-3">
             <div class="card-header"><i class="bi bi-pie-chart me-2"></i>Ringkasan per Jenis</div>
             <div class="card-body">
                 @forelse($ringkasan as $item)
@@ -132,6 +132,108 @@
                 @endforelse
             </div>
         </div>
+
+        {{-- Backup & Kelola Data --}}
+        <div class="card card-custom border-warning">
+            <div class="card-header bg-warning bg-opacity-10">
+                <h6 class="mb-0"><i class="bi bi-shield-check me-2"></i>Backup & Kelola Data</h6>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Download backup Excel sebelum menghapus data lama. Setiap bulan menjadi sheet terpisah.
+                </p>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold mb-1" style="font-size: 0.85rem;">Pilih Tahun</label>
+                    <select class="form-select form-select-sm" id="backupTahun">
+                        @forelse($availableYears as $yr)
+                        <option value="{{ $yr }}">{{ $yr }}</option>
+                        @empty
+                        <option value="">Tidak ada data</option>
+                        @endforelse
+                    </select>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <a href="#" class="btn btn-success btn-sm" id="btnDownloadBackup">
+                        <i class="bi bi-download me-1"></i>Download Backup Excel
+                    </a>
+                    <button type="button" class="btn btn-outline-danger btn-sm" id="btnDeleteData"
+                            {{ $availableYears->isEmpty() ? 'disabled' : '' }}>
+                        <i class="bi bi-trash me-1"></i>Hapus Data Tahun Ini
+                    </button>
+                </div>
+
+                <div class="mt-2">
+                    <small class="text-muted" style="font-size: 0.75rem;">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        Disarankan hapus data yang sudah lebih dari 6 bulan setelah backup.
+                    </small>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+{{-- Delete Confirmation Modal --}}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white border-0">
+                <h6 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-2"></i>Konfirmasi Hapus</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">Anda yakin ingin <strong>menghapus semua data potongan</strong> untuk tahun:</p>
+                <h3 class="text-center text-danger fw-bold" id="deleteYearDisplay"></h3>
+                <div class="alert alert-warning py-2 mb-0 mt-2">
+                    <small><i class="bi bi-exclamation-circle me-1"></i>Data yang dihapus tidak bisa dikembalikan. Pastikan Anda sudah mengunduh backup!</small>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                <form method="POST" action="{{ route('admin.laporan.delete-old') }}" id="deleteForm">
+                    @csrf
+                    <input type="hidden" name="tahun" id="deleteTahunInput">
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        <i class="bi bi-trash me-1"></i>Ya, Hapus Data
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+    const backupSelect = document.getElementById('backupTahun');
+    const btnDownload = document.getElementById('btnDownloadBackup');
+    const btnDelete = document.getElementById('btnDeleteData');
+
+    // Update download link when year changes
+    function updateDownloadLink() {
+        const tahun = backupSelect.value;
+        if (tahun) {
+            btnDownload.href = "{{ route('admin.laporan.export') }}?tahun=" + tahun;
+            btnDownload.classList.remove('disabled');
+        } else {
+            btnDownload.href = '#';
+            btnDownload.classList.add('disabled');
+        }
+    }
+
+    backupSelect.addEventListener('change', updateDownloadLink);
+    updateDownloadLink(); // init
+
+    // Delete button → open modal
+    btnDelete.addEventListener('click', function() {
+        const tahun = backupSelect.value;
+        if (!tahun) return;
+        document.getElementById('deleteYearDisplay').textContent = tahun;
+        document.getElementById('deleteTahunInput').value = tahun;
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    });
+</script>
+@endpush
 @endsection

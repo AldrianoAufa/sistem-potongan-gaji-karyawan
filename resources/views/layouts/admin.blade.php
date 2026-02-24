@@ -41,7 +41,7 @@
         </a>
         <a class="nav-link {{ request()->routeIs('admin.input-bulanan.*') ? 'active' : '' }}"
            href="{{ route('admin.input-bulanan.index') }}">
-            <i class="bi bi-cash-coin"></i> Input Bulanan
+            <i class="bi bi-cash-coin"></i> Data Potongan
         </a>
         <a class="nav-link {{ request()->routeIs('admin.import.*') ? 'active' : '' }}"
            href="{{ route('admin.import.form') }}">

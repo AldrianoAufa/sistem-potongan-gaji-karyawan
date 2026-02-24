@@ -2,9 +2,19 @@
 @section('title', 'Riwayat Potongan')
 
 @section('content')
-<div class="page-header">
-    <h4><i class="bi bi-clock-history me-2"></i>Riwayat Potongan Gaji</h4>
-    <p class="text-muted">Riwayat potongan gaji Anda</p>
+<div class="page-header d-flex justify-content-between align-items-start">
+    <div>
+        <h4><i class="bi bi-clock-history me-2"></i>Riwayat Potongan Gaji</h4>
+        <p class="text-muted">Riwayat potongan gaji Anda</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+            <i class="bi bi-printer me-1"></i>Cetak
+        </button>
+        <a href="{{ route('user.dashboard') }}" class="btn btn-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Kembali
+        </a>
+    </div>
 </div>
 
 <!-- Filter -->
@@ -92,4 +102,15 @@
     <div class="card-footer bg-white">{{ $potongan->links() }}</div>
     @endif
 </div>
+
+@push('styles')
+<style>
+    @media print {
+        .sidebar, .navbar, .page-header .btn, .page-header .d-flex.gap-2,
+        .card-custom.mb-3, .card-footer, .btn-outline-info { display: none !important; }
+        .main-content { margin-left: 0 !important; padding: 0 !important; }
+        .page-header { margin-bottom: 10px !important; }
+    }
+</style>
+@endpush
 @endsection

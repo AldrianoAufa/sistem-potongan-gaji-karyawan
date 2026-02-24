@@ -2,13 +2,20 @@
 @section('title', 'Dashboard')
 
 @section('content')
-<div class="page-header mb-4">
-    <h4><i class="bi bi-house-fill me-2"></i>Selamat Datang, {{ $karyawan->nama ?? auth()->user()->username }}</h4>
-    @if($karyawan)
-    <p class="text-muted mb-0" style="font-size: 0.9rem;">
-        <span class="badge bg-primary me-1">{{ $karyawan->kode_karyawan }}</span>
-        {{ $karyawan->jabatan->nama_jabatan ?? '-' }}
-    </p>
+<div class="page-header mb-4 d-flex justify-content-between align-items-start">
+    <div>
+        <h4><i class="bi bi-house-fill me-2"></i>Selamat Datang, {{ $karyawan->nama ?? auth()->user()->username }}</h4>
+        @if($karyawan)
+        <p class="text-muted mb-0" style="font-size: 0.9rem;">
+            <span class="badge bg-primary me-1">{{ $karyawan->kode_karyawan }}</span>
+            {{ $karyawan->jabatan->nama_jabatan ?? '-' }}
+        </p>
+        @endif
+    </div>
+    @if($karyawan && $potonganBulanIni->count() > 0)
+    <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+        <i class="bi bi-printer me-1"></i>Cetak
+    </button>
     @endif
 </div>
 
@@ -62,18 +69,36 @@
     </div>
 </div>
 
-<!-- Chart -->
-<div class="card card-custom mb-4">
-    <div class="card-header">
-        <i class="bi bi-graph-up me-2 text-primary"></i>Tren Potongan 6 Bulan Terakhir
+<!-- Charts Row -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-7">
+        <div class="card card-custom h-100">
+            <div class="card-header">
+                <i class="bi bi-graph-up me-2 text-primary"></i>Tren Potongan 6 Bulan Terakhir
+            </div>
+            <div class="card-body">
+                <canvas id="chartUser" height="140"></canvas>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
-        <canvas id="chartUser" height="100"></canvas>
+    <div class="col-lg-5">
+        <div class="card card-custom h-100">
+            <div class="card-header">
+                <i class="bi bi-pie-chart-fill me-2 text-primary"></i>Komposisi Potongan Bulan Ini
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                @if($potonganBulanIni->count() > 0)
+                <canvas id="chartPie" height="200"></canvas>
+                @else
+                <p class="text-muted text-center mb-0">Belum ada data potongan bulan ini</p>
+                @endif
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Current month breakdown -->
-<div class="card card-custom">
+<div class="card card-custom" id="printSection">
     <div class="card-header d-flex justify-content-between align-items-center">
         <span><i class="bi bi-list-check me-2 text-primary"></i>Rincian Potongan Bulan Ini</span>
         <a href="{{ route('user.potongan.index') }}" class="btn btn-sm btn-outline-primary">Lihat Semua Riwayat</a>
@@ -121,6 +146,7 @@
 @if($karyawan)
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
+    // Line Chart - Tren 6 Bulan
     const ctx = document.getElementById('chartUser').getContext('2d');
     const data = @json($grafikData);
 
@@ -142,6 +168,7 @@
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: { display: false },
                 tooltip: {
@@ -166,6 +193,61 @@
             }
         }
     });
+
+    // Pie Chart - Komposisi Bulan Ini
+    @if($potonganBulanIni->count() > 0)
+    const pieCtx = document.getElementById('chartPie').getContext('2d');
+    const pieData = @json($pieChartData);
+
+    new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+            labels: pieData.map(d => d.label),
+            datasets: [{
+                data: pieData.map(d => d.value),
+                backgroundColor: pieData.map(d => d.color),
+                borderWidth: 2,
+                borderColor: '#fff',
+                hoverOffset: 8,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 12,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: { size: 11 }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                            const pct = ((ctx.parsed / total) * 100).toFixed(1);
+                            return ctx.label + ': Rp ' + ctx.parsed.toLocaleString('id-ID') + ' (' + pct + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+    @endif
 </script>
 @endif
+@endpush
+
+@push('styles')
+<style>
+    @media print {
+        .sidebar, .navbar, .page-header .btn, .btn-outline-primary, .card-header .btn { display: none !important; }
+        .main-content { margin-left: 0 !important; padding: 0 !important; }
+        .stat-card, .card-custom { break-inside: avoid; }
+        canvas { max-height: 200px !important; }
+    }
+</style>
 @endpush
