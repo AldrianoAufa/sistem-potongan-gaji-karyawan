@@ -10,12 +10,25 @@ class JenisPotonganController extends Controller
 {
     public function index()
     {
-        $jenisPotongan = JenisPotongan::withCount(['inputBulanan', 'karyawan'])
-            ->with(['karyawan' => function ($q) {
-                $q->select('karyawan.id', 'kode_karyawan', 'nama')->orderBy('nama');
-            }])
+        // Ambil semua jenis potongan beserta count karyawan dan input bulanan
+        $jenisPotongan = JenisPotongan::withCount('inputBulanan')
             ->orderBy('kode_potongan')
             ->paginate(15);
+
+        // Load relasi karyawan secara terpisah agar tidak konflik dengan withCount
+        $jenisPotongan->load(['karyawan' => function ($q) {
+            $q->select('karyawan.id', 'kode_karyawan', 'nama', 'jabatan_id', 'departemen_id')
+              ->with(['jabatan:id,nama_jabatan', 'departemen:id,nama_departemen'])
+              ->orderBy('nama');
+        }]);
+
+        // Debug: Log the data being passed to view
+        \Log::info('JenisPotongan Index - Total records: ' . $jenisPotongan->count());
+        \Log::info('JenisPotongan Index - Total in database: ' . JenisPotongan::count());
+        foreach ($jenisPotongan as $item) {
+            \Log::info('Item: ' . $item->kode_potongan . ' - ' . $item->nama_potongan . ' (karyawan: ' . $item->karyawan->count() . ')');
+        }
+
         return view('admin.jenis-potongan.index', compact('jenisPotongan'));
     }
 
