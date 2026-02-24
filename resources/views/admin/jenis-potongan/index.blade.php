@@ -18,6 +18,7 @@
                         <th style="width: 50px;">No</th>
                         <th>Kode</th>
                         <th>Nama Potongan</th>
+                        <th>Karyawan</th>
                         <th>Jumlah Data</th>
                         <th style="width: 120px;">Aksi</th>
                     </tr>
@@ -28,6 +29,17 @@
                         <td>{{ $jenisPotongan->firstItem() + $i }}</td>
                         <td><span class="badge bg-primary">{{ $item->kode_potongan }}</span></td>
                         <td class="fw-semibold">{{ $item->nama_potongan }}</td>
+                        <td>
+                            @if($item->karyawan_count > 0)
+                                <button type="button" class="btn btn-sm btn-outline-info py-0 px-2"
+                                        data-bs-toggle="modal" data-bs-target="#karyawanModal{{ $item->id }}"
+                                        style="font-size: 0.8rem;">
+                                    <i class="bi bi-people-fill me-1"></i>{{ $item->karyawan_count }} karyawan
+                                </button>
+                            @else
+                                <span class="text-muted small"><i class="bi bi-dash"></i> 0 karyawan</span>
+                            @endif
+                        </td>
                         <td><span class="badge bg-info">{{ $item->input_bulanan_count }} record</span></td>
                         <td>
                             <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
@@ -74,9 +86,50 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Karyawan Modal -->
+                    @if($item->karyawan_count > 0)
+                    <div class="modal fade" id="karyawanModal{{ $item->id }}" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-scrollable">
+                            <div class="modal-content border-0 shadow-lg">
+                                <div class="modal-header bg-info text-white border-0">
+                                    <h6 class="modal-title mb-0">
+                                        <i class="bi bi-people-fill me-2"></i>Karyawan — {{ $item->nama_potongan }}
+                                    </h6>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body p-0">
+                                    <table class="table table-sm table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width:40px;" class="ps-3">No</th>
+                                                <th>NIK</th>
+                                                <th>Nama Karyawan</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($item->karyawan as $idx => $k)
+                                            <tr>
+                                                <td class="ps-3">{{ $idx + 1 }}</td>
+                                                <td><span class="badge bg-light text-dark">{{ $k->kode_karyawan }}</span></td>
+                                                <td>{{ $k->nama }}</td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="modal-footer bg-light border-0 py-2">
+                                    <small class="text-muted me-auto">Total: {{ $item->karyawan_count }} karyawan</small>
+                                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
                     @empty
                     <tr>
-                        <td colspan="5" class="text-center text-muted py-4">Belum ada data jenis potongan</td>
+                        <td colspan="6" class="text-center text-muted py-4">Belum ada data jenis potongan</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -84,7 +137,12 @@
         </div>
     </div>
     @if($jenisPotongan->hasPages())
-    <div class="card-footer bg-white">{{ $jenisPotongan->links() }}</div>
+    <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center px-3 py-2">
+        <small class="text-muted">
+            Menampilkan {{ $jenisPotongan->firstItem() }}–{{ $jenisPotongan->lastItem() }} dari {{ $jenisPotongan->total() }}
+        </small>
+        {{ $jenisPotongan->links() }}
+    </div>
     @endif
 </div>
 

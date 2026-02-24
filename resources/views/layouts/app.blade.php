@@ -56,15 +56,13 @@
 
         /* Sidebar */
         .sidebar {
-            position: fixed;
-            top: 56px;
-            left: 0;
             width: 260px;
-            height: calc(100vh - 56px);
+            flex-shrink: 0;
             background: var(--sidebar-bg);
             overflow-y: auto;
+            min-height: calc(100vh - 56px);
             transition: all 0.3s ease;
-            z-index: 1000;
+            z-index: 100;
         }
 
         .sidebar .nav-link {
@@ -110,10 +108,10 @@
 
         /* Main content */
         .main-content {
-            margin-left: 260px;
+            flex: 1;
             padding: 1.5rem;
             min-height: calc(100vh - 56px);
-            transition: all 0.3s ease;
+            overflow-x: hidden;
         }
 
         /* Stat cards */
@@ -209,15 +207,16 @@
         /* Responsive */
         @media (max-width: 768px) {
             .sidebar {
-                transform: translateX(-100%);
+                display: none;
             }
-
             .sidebar.show {
-                transform: translateX(0);
-            }
-
-            .main-content {
-                margin-left: 0;
+                display: block;
+                position: fixed;
+                top: 56px;
+                left: 0;
+                width: 260px;
+                height: calc(100vh - 56px);
+                z-index: 1050;
             }
         }
 
@@ -281,7 +280,7 @@
         </div>
     </nav>
 
-    <div style="margin-top: 56px;">
+    <div style="margin-top: 56px; display: flex; align-items: stretch;">
         @yield('body')
     </div>
 

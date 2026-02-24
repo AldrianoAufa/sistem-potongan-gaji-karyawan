@@ -111,8 +111,13 @@
         </div>
     </div>
     @if($karyawanList->hasPages())
-    <div class="card-footer bg-white border-0">
-        {{ $karyawanList->links() }}
+    <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center px-3 py-2">
+        <small class="text-muted">
+            Menampilkan {{ $karyawanList->firstItem() }}–{{ $karyawanList->lastItem() }} dari {{ $karyawanList->total() }} karyawan
+        </small>
+        <div class="pagination-sm-custom">
+            {{ $karyawanList->links() }}
+        </div>
     </div>
     @endif
 </div>
@@ -126,6 +131,26 @@
 .cursor-pointer { cursor: pointer; }
 .form-check-input:checked + .form-check-label .fw-semibold {
     color: var(--primary) !important;
+}
+.pagination-sm-custom .pagination {
+    margin: 0;
+    gap: 2px;
+}
+.pagination-sm-custom .page-link {
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    border-radius: 4px !important;
+    color: var(--bs-primary);
+    border: 1px solid #dee2e6;
+    line-height: 1.5;
+}
+.pagination-sm-custom .page-item.active .page-link {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: #fff;
+}
+.pagination-sm-custom .page-item.disabled .page-link {
+    color: #adb5bd;
 }
 </style>
 @endsection

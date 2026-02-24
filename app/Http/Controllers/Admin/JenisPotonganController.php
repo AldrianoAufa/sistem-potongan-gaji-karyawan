@@ -10,7 +10,10 @@ class JenisPotonganController extends Controller
 {
     public function index()
     {
-        $jenisPotongan = JenisPotongan::withCount('inputBulanan')
+        $jenisPotongan = JenisPotongan::withCount(['inputBulanan', 'karyawan'])
+            ->with(['karyawan' => function ($q) {
+                $q->select('karyawan.id', 'kode_karyawan', 'nama')->orderBy('nama');
+            }])
             ->orderBy('kode_potongan')
             ->paginate(15);
         return view('admin.jenis-potongan.index', compact('jenisPotongan'));
