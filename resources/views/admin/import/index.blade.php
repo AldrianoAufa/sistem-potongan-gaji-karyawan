@@ -87,6 +87,103 @@
     </div>
 </div>
 
+<!-- Daftar Karyawan per Departemen -->
+<div class="card card-custom mt-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-custom table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">No</th>
+                        <th>Kode</th>
+                        <th>Nama Departemen</th>
+                        <th>Jumlah Karyawan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($departemenList as $i => $dept)
+                    <tr>
+                        <td>{{ $i + 1 }}</td>
+                        <td><span class="badge bg-primary">{{ $dept->kode_departemen }}</span></td>
+                        <td class="fw-semibold">{{ $dept->nama_departemen }}</td>
+                        <td>
+                            @if($dept->karyawan_count > 0)
+                                <button type="button" class="btn btn-sm btn-outline-info py-0 px-2"
+                                        data-bs-toggle="modal" data-bs-target="#deptModal{{ $dept->id }}"
+                                        style="font-size: 0.8rem;">
+                                    <i class="bi bi-people-fill me-1"></i>{{ $dept->karyawan_count }} karyawan
+                                </button>
+                            @else
+                                <span class="text-muted small"><i class="bi bi-dash"></i> 0 karyawan</span>
+                            @endif
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">Belum ada data departemen</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{{-- Modal Karyawan per Departemen --}}
+@foreach($departemenList as $dept)
+    @if($dept->karyawan_count > 0)
+    <div class="modal fade" id="deptModal{{ $dept->id }}" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-info text-white border-0">
+                    <h6 class="modal-title mb-0">
+                        <i class="bi bi-diagram-3-fill me-2"></i>Karyawan — {{ $dept->nama_departemen }}
+                    </h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="px-3 pt-3 pb-2">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" class="form-control border-start-0 dept-karyawan-search"
+                               data-target="deptTable{{ $dept->id }}"
+                               placeholder="Cari NIK atau nama karyawan...">
+                    </div>
+                </div>
+                <div class="modal-body p-0">
+                    <table class="table table-sm table-hover mb-0" id="deptTable{{ $dept->id }}">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:40px;" class="ps-3">No</th>
+                                <th>NIK</th>
+                                <th>Nama Karyawan</th>
+                                <th>Jabatan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($dept->karyawan as $idx => $k)
+                            <tr>
+                                <td class="ps-3">{{ $idx + 1 }}</td>
+                                <td><span class="badge bg-light text-dark">{{ $k->kode_karyawan }}</span></td>
+                                <td>{{ $k->nama }}</td>
+                                <td class="text-muted">{{ $k->jabatan->nama_jabatan ?? '-' }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                    <div class="text-center text-muted py-3 d-none" id="deptNoResult{{ $dept->id }}">
+                        <i class="bi bi-search me-1"></i>Tidak ada hasil ditemukan
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 py-2">
+                    <small class="text-muted me-auto">Total: <span class="dept-shown-count{{ $dept->id }}">{{ $dept->karyawan_count }}</span> karyawan</small>
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+@endforeach
+
 @push('scripts')
 <script>
     const dropZone = document.getElementById('dropZone');
@@ -133,7 +230,6 @@
         document.getElementById('submitBtn').innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Memproses...';
         document.getElementById('progressSection').style.display = 'block';
 
-        // Simulate progress
         let progress = 0;
         const interval = setInterval(() => {
             progress += Math.random() * 15;
@@ -141,6 +237,47 @@
             document.getElementById('progressBar').style.width = progress + '%';
             document.getElementById('progressText').textContent = Math.round(progress) + '%';
         }, 500);
+    });
+
+    // Pencarian karyawan di modal departemen
+    document.querySelectorAll('.dept-karyawan-search').forEach(function(input) {
+        input.addEventListener('input', function() {
+            const keyword = this.value.toLowerCase().trim();
+            const tableId = this.getAttribute('data-target');
+            const table = document.getElementById(tableId);
+            const rows = table.querySelectorAll('tbody tr');
+            const modalId = tableId.replace('deptTable', '');
+            const noResult = document.getElementById('deptNoResult' + modalId);
+            const countSpan = document.querySelector('.dept-shown-count' + modalId);
+            let visibleCount = 0;
+
+            rows.forEach(function(row) {
+                const nik = row.cells[1] ? row.cells[1].textContent.toLowerCase() : '';
+                const nama = row.cells[2] ? row.cells[2].textContent.toLowerCase() : '';
+
+                if (nik.includes(keyword) || nama.includes(keyword)) {
+                    row.style.display = '';
+                    visibleCount++;
+                    row.cells[0].textContent = visibleCount;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (noResult) noResult.classList.toggle('d-none', visibleCount > 0);
+            if (countSpan) countSpan.textContent = visibleCount;
+        });
+    });
+
+    // Bersihkan pencarian saat modal ditutup
+    document.querySelectorAll('.modal').forEach(function(modal) {
+        modal.addEventListener('hidden.bs.modal', function() {
+            const searchInput = this.querySelector('.dept-karyawan-search');
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.dispatchEvent(new Event('input'));
+            }
+        });
     });
 </script>
 @endpush

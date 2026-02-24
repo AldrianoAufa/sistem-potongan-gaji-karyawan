@@ -19,7 +19,11 @@ class ImportController extends Controller
 
     public function showForm()
     {
-        return view('admin.import.index');
+        $departemenList = \App\Models\Departemen::with(['karyawan' => function ($q) {
+            $q->orderBy('nama')->with('jabatan');
+        }])->withCount('karyawan')->orderBy('nama_departemen')->get();
+
+        return view('admin.import.index', compact('departemenList'));
     }
 
     public function process(Request $request)
@@ -68,6 +72,7 @@ class ImportController extends Controller
         $berhasil = 0;
         $gagal = 0;
         $errors = [];
+        $mappingData = []; // Kumpulkan pasangan karyawan-potongan untuk auto mapping
 
         DB::beginTransaction();
 
@@ -152,7 +157,20 @@ class ImportController extends Controller
                     'data_rinci' => $dataRinci,
                 ]);
 
+                // Simpan pasangan untuk auto mapping
+                $karyawanId = $karyawanMap[$cust];
+                $potonganId = $jenisPotonganMap[$grup];
+                $mappingData[$karyawanId][$potonganId] = true;
+
                 $berhasil++;
+            }
+
+            // Auto mapping: tambahkan ke tabel pivot karyawan_potongan tanpa menghapus yang sudah ada
+            foreach ($mappingData as $karyawanId => $potonganIds) {
+                $karyawanModel = karyawan::find($karyawanId);
+                if ($karyawanModel) {
+                    $karyawanModel->potongan()->syncWithoutDetaching(array_keys($potonganIds));
+                }
             }
 
             DB::commit();

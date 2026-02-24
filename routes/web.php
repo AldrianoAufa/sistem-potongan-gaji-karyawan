@@ -32,7 +32,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('karyawan-mapping', [karyawanController::class, 'mapping'])->name('karyawan.mapping');
     Route::post('karyawan-mapping/{karyawan}', [karyawanController::class, 'updateMapping'])->name('karyawan.mapping.update');
     Route::resource('jabatan', JabatanController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('departemen', DepartemenController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
+    Route::resource('departemen', DepartemenController::class)->only(['index', 'show', 'store', 'update', 'destroy'])->parameters(['departemen' => 'departemen']);
     Route::resource('jenis-potongan', JenisPotonganController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('input-bulanan', InputBulananController::class)->except(['show']);
     Route::post('input-bulanan-bulk', [InputBulananController::class, 'bulkStore'])->name('input-bulanan.bulk-store');

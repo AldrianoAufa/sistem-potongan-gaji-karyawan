@@ -106,6 +106,16 @@
             margin: 0;
         }
 
+        .sidebar-heading {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 1rem 1.25rem 0.4rem;
+            margin-top: 0.25rem;
+        }
+
         /* Main content */
         .main-content {
             flex: 1;
