@@ -13,15 +13,23 @@
 
 <!-- Summary -->
 <div class="row g-3 mb-4">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card card-custom text-center py-3" style="border-left: 4px solid #28A745;">
             <div class="card-body">
                 <div style="font-size: 2rem; font-weight: 700; color: #28A745;">{{ $berhasil }}</div>
-                <div class="text-muted">Berhasil Diimpor</div>
+                <div class="text-muted">Data Baru</div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
+        <div class="card card-custom text-center py-3" style="border-left: 4px solid #FD7E14;">
+            <div class="card-body">
+                <div style="font-size: 2rem; font-weight: 700; color: #FD7E14;">{{ $diupdate }}</div>
+                <div class="text-muted">Data Diupdate</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
         <div class="card card-custom text-center py-3" style="border-left: 4px solid #DC3545;">
             <div class="card-body">
                 <div style="font-size: 2rem; font-weight: 700; color: #DC3545;">{{ $gagal }}</div>
@@ -29,10 +37,10 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card card-custom text-center py-3" style="border-left: 4px solid #17A2B8;">
             <div class="card-body">
-                <div style="font-size: 2rem; font-weight: 700; color: #17A2B8;">{{ $berhasil + $gagal }}</div>
+                <div style="font-size: 2rem; font-weight: 700; color: #17A2B8;">{{ $berhasil + $diupdate + $gagal }}</div>
                 <div class="text-muted">Total Baris</div>
             </div>
         </div>
@@ -42,7 +50,7 @@
 <div class="alert alert-{{ $gagal == 0 ? 'success' : 'warning' }}">
     <i class="bi bi-{{ $gagal == 0 ? 'check-circle-fill' : 'exclamation-triangle-fill' }} me-2"></i>
     Import untuk periode <strong>{{ $bulanNames[$bulan] }} {{ $tahun }}</strong>:
-    {{ $berhasil }} baris berhasil{{ $gagal > 0 ? ", $gagal baris gagal" : '' }}.
+    {{ $berhasil }} baris baru ditambahkan{{ $diupdate > 0 ? ", $diupdate baris diupdate" : '' }}{{ $gagal > 0 ? ", $gagal baris gagal" : '' }}.
 </div>
 
 @if(count($errors) > 0)

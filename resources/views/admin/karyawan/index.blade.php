@@ -68,6 +68,15 @@
                             <a href="{{ route('admin.karyawan.edit', $item) }}" class="btn btn-warning btn-sm" title="Edit">
                                 <i class="bi bi-pencil-square"></i>
                             </a>
+                            @if($item->user)
+                            <form action="{{ route('admin.karyawan.reset-password', $item) }}" method="POST" class="d-inline"
+                                  onsubmit="return confirm('Reset password {{ $item->nama }} ke NIK ({{ $item->kode_karyawan }})?')">
+                                @csrf
+                                <button type="submit" class="btn btn-info btn-sm" title="Reset Password ke NIK">
+                                    <i class="bi bi-key"></i>
+                                </button>
+                            </form>
+                            @endif
                             <form action="{{ route('admin.karyawan.destroy', $item) }}" method="POST" class="d-inline"
                                   onsubmit="return confirm('Yakin hapus karyawan {{ $item->nama }}?')">
                                 @csrf @method('DELETE')

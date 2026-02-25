@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
 use App\Http\Controllers\Admin\KaryawanController;
 use App\Http\Controllers\Admin\JabatanController;
@@ -24,6 +25,12 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+// Change password (shared, any authenticated user)
+Route::middleware('auth')->group(function () {
+    Route::get('/change-password', [PasswordController::class, 'showChangeForm'])->name('password.form');
+    Route::post('/change-password', [PasswordController::class, 'changePassword'])->name('password.change');
+});
+
 // Admin routes
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
@@ -31,6 +38,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::resource('karyawan', karyawanController::class)->except(['show']);
     Route::get('karyawan-mapping', [karyawanController::class, 'mapping'])->name('karyawan.mapping');
     Route::post('karyawan-mapping/{karyawan}', [karyawanController::class, 'updateMapping'])->name('karyawan.mapping.update');
+    Route::post('karyawan/{karyawan}/reset-password', [KaryawanController::class, 'resetPassword'])->name('karyawan.reset-password');
     Route::resource('jabatan', JabatanController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('departemen', DepartemenController::class)->only(['index', 'show', 'store', 'update', 'destroy'])->parameters(['departemen' => 'departemen']);
     Route::resource('jenis-potongan', JenisPotonganController::class)->only(['index', 'store', 'update', 'destroy']);

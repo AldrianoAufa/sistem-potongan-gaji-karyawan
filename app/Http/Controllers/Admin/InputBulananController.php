@@ -59,6 +59,18 @@ class InputBulananController extends Controller
             'data_rinci.SALD' => 'nullable|numeric',
         ]);
 
+        // Check for duplicate entry
+        $exists = InputBulanan::where('karyawan_id', $validated['karyawan_id'])
+            ->where('jenis_potongan_id', $validated['jenis_potongan_id'])
+            ->where('bulan', $validated['bulan'])
+            ->where('tahun', $validated['tahun'])
+            ->exists();
+
+        if ($exists) {
+            return back()->withInput()->with('error',
+                'Data potongan untuk karyawan ini dengan jenis potongan, bulan, dan tahun yang sama sudah ada. Silakan edit data yang sudah ada.');
+        }
+
         // Clean data_rinci: only include if any value is non-empty
         if (isset($validated['data_rinci'])) {
             $rinci = array_filter($validated['data_rinci'], fn($v) => $v !== null && $v !== '');
@@ -96,6 +108,19 @@ class InputBulananController extends Controller
             'data_rinci.RPBG' => 'nullable|numeric',
             'data_rinci.SALD' => 'nullable|numeric',
         ]);
+
+        // Check for duplicate entry (exclude current record)
+        $exists = InputBulanan::where('karyawan_id', $validated['karyawan_id'])
+            ->where('jenis_potongan_id', $validated['jenis_potongan_id'])
+            ->where('bulan', $validated['bulan'])
+            ->where('tahun', $validated['tahun'])
+            ->where('id', '!=', $inputBulanan->id)
+            ->exists();
+
+        if ($exists) {
+            return back()->withInput()->with('error',
+                'Data potongan untuk karyawan ini dengan jenis potongan, bulan, dan tahun yang sama sudah ada.');
+        }
 
         if (isset($validated['data_rinci'])) {
             $rinci = array_filter($validated['data_rinci'], fn($v) => $v !== null && $v !== '');

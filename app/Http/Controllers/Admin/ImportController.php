@@ -93,6 +93,7 @@ class ImportController extends Controller
         $jenisPotonganMap = JenisPotongan::pluck('id', 'kode_potongan')->toArray();
 
         $berhasil = 0;
+        $diupdate = 0;
         $gagal = 0;
         $errors = [];
         $mappingData = []; // Kumpulkan pasangan karyawan-potongan untuk auto mapping
@@ -171,21 +172,29 @@ class ImportController extends Controller
                     ];
                 }
 
-                InputBulanan::create([
-                    'karyawan_id' => $karyawanMap[$cust],
-                    'jenis_potongan_id' => $jenisPotonganMap[$grup],
-                    'bulan' => $bulan,
-                    'tahun' => $tahun,
-                    'jumlah_potongan' => (float) $angs,
-                    'data_rinci' => $dataRinci,
-                ]);
+                $record = InputBulanan::updateOrCreate(
+                    [
+                        'karyawan_id' => $karyawanMap[$cust],
+                        'jenis_potongan_id' => $jenisPotonganMap[$grup],
+                        'bulan' => $bulan,
+                        'tahun' => $tahun,
+                    ],
+                    [
+                        'jumlah_potongan' => (float) $angs,
+                        'data_rinci' => $dataRinci,
+                    ]
+                );
+
+                if ($record->wasRecentlyCreated) {
+                    $berhasil++;
+                } else {
+                    $diupdate++;
+                }
 
                 // Simpan pasangan untuk auto mapping
                 $karyawanId = $karyawanMap[$cust];
                 $potonganId = $jenisPotonganMap[$grup];
                 $mappingData[$karyawanId][$potonganId] = true;
-
-                $berhasil++;
             }
 
             // Auto mapping: tambahkan ke tabel pivot karyawan_potongan tanpa menghapus yang sudah ada
@@ -202,7 +211,7 @@ class ImportController extends Controller
             return back()->with('error', 'Terjadi kesalahan saat import: ' . $e->getMessage());
         }
 
-        return view('admin.import.result', compact('berhasil', 'gagal', 'errors', 'bulan', 'tahun'));
+        return view('admin.import.result', compact('berhasil', 'diupdate', 'gagal', 'errors', 'bulan', 'tahun'));
     }
 
     public function collectiveStore(Request $request)

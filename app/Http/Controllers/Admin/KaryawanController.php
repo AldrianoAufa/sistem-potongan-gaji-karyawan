@@ -15,7 +15,7 @@ class KaryawanController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Karyawan::with(['jabatan', 'departemen']);
+        $query = Karyawan::with(['jabatan', 'departemen', 'user']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -152,5 +152,18 @@ class KaryawanController extends Controller
         $karyawan->potongan()->sync($validated['jenis_potongan_ids'] ?? []);
 
         return back()->with('success', 'Mapping potongan untuk ' . $karyawan->nama . ' berhasil diperbarui.');
+    }
+
+    public function resetPassword(Karyawan $karyawan)
+    {
+        $user = $karyawan->user;
+
+        if (!$user) {
+            return back()->with('error', 'Karyawan ' . $karyawan->nama . ' belum memiliki akun user.');
+        }
+
+        $user->update(['password' => $karyawan->kode_karyawan]);
+
+        return back()->with('success', 'Password ' . $karyawan->nama . ' berhasil di-reset ke NIK (' . $karyawan->kode_karyawan . ').');
     }
 }

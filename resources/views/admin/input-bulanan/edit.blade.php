@@ -81,6 +81,10 @@
                     <input type="number" name="data_rinci[PKOK]" class="form-control form-control-sm" value="{{ $rinci['PKOK'] ?? '' }}" step="1">
                 </div>
                 <div class="col-md-4">
+                    <label class="form-label" style="font-size: 0.85rem;">Bunga (RPBG)</label>
+                    <input type="number" name="data_rinci[RPBG]" class="form-control form-control-sm" value="{{ $rinci['RPBG'] ?? '' }}" step="1">
+                </div>
+                <div class="col-md-4">
                     <label class="form-label" style="font-size: 0.85rem;">Sisa Saldo (SALD)</label>
                     <input type="number" name="data_rinci[SALD]" class="form-control form-control-sm" value="{{ $rinci['SALD'] ?? '' }}" step="1">
                 </div>

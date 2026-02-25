@@ -65,6 +65,12 @@
             </div>
             <div class="col-md-4">
                 <div class="p-3 rounded" style="background: #F8F9FA;">
+                    <small class="text-muted d-block">Bunga</small>
+                    <strong>Rp {{ number_format($r['RPBG'] ?? 0, 0, ',', '.') }}</strong>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 rounded" style="background: #F8F9FA;">
                     <small class="text-muted d-block">Sisa Saldo</small>
                     <strong class="text-danger">Rp {{ number_format($r['SALD'] ?? 0, 0, ',', '.') }}</strong>
                 </div>
