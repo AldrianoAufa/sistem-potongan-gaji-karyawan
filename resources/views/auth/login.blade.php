@@ -7,7 +7,7 @@
     <meta name="description" content="Login ke Sistem Potongan Gaji PT Primatex Indonesia">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
@@ -17,8 +17,16 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --primary: #137fec;
+            --primary-dark: #0f66be;
+            --primary-light: #e6f2fe;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+        }
+
         body {
-            font-family: "Inter", sans-serif;
+            font-family: "Manrope", sans-serif;
             min-height: 100vh;
             background: #f8fafc;
             display: flex;
@@ -27,9 +35,10 @@
             padding: 1rem;
             position: relative;
             overflow-x: hidden;
+            color: var(--text-dark);
         }
 
-        /* Background dengan gambar dan gradient overlay */
+        /* Background elements */
         .background {
             position: fixed;
             top: 0;
@@ -46,41 +55,44 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: url('/img/primatex-slide.jpg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
+            background-color: #f1f5f9;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(210,100%,92%,1) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(210,88%,96%,1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(210,100%,94%,1) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, hsla(210,80%,93%,1) 0px, transparent 50%);
+            z-index: 1;
         }
-
 
         .login-container {
             width: 100%;
             max-width: 440px;
             position: relative;
-            z-index: 1;
+            z-index: 10;
         }
 
         .login-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 32px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 24px;
             box-shadow: 
-                0 25px 50px -12px rgba(0, 0, 0, 0.25),
-                inset 0 1px 1px rgba(255, 255, 255, 0.6);
+                0 4px 6px -1px rgba(0, 0, 0, 0.05),
+                0 20px 40px -10px rgba(19, 127, 236, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
             padding: 2.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            animation: fadeInUp 0.6s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(24px) scale(0.98);
             }
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0) scale(1);
             }
         }
 
@@ -91,57 +103,42 @@
         }
 
         .logo-wrapper {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #1e3a5f, #2c5a8c);
-            border-radius: 24px;
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, var(--primary), #489eff);
+            border-radius: 20px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 1.25rem;
-            box-shadow: 0 10px 20px -5px rgba(30, 58, 95, 0.3);
+            box-shadow: 0 12px 24px -6px rgba(19, 127, 236, 0.4);
             position: relative;
-            overflow: hidden;
-        }
-
-        .logo-wrapper::after {
-            content: '';
-            position: absolute;
-            inset: -2px;
-            border-radius: 26px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.5), rgba(255,255,255,0));
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            pointer-events: none;
-        }
-
-        .logo-wrapper img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: white;
+            font-size: 1.8rem;
+            letter-spacing: 1px;
         }
 
         .login-header h4 {
-            font-weight: 700;
-            font-size: 1.5rem;
-            color: #1e293b;
-            margin-bottom: 0.25rem;
+            font-weight: 800;
+            font-size: 1.4rem;
+            color: var(--text-dark);
+            margin-bottom: 0.35rem;
             letter-spacing: -0.02em;
         }
 
         .login-header p {
-            color: #64748b;
-            font-size: 0.9rem;
-            font-weight: 400;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 500;
         }
 
         /* Form styling */
         .form-label {
-            font-weight: 500;
-            font-size: 0.875rem;
-            color: #334155;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #475569;
             margin-bottom: 0.5rem;
         }
 
@@ -157,51 +154,55 @@
             transform: translateY(-50%);
             color: #94a3b8;
             font-size: 1.1rem;
-            transition: color 0.2s ease;
+            transition: color 0.3s ease;
             z-index: 4;
         }
 
         .form-control-custom {
             width: 100%;
-            padding: 0.875rem 1rem 0.875rem 2.75rem;
+            padding: 0.8rem 1rem 0.8rem 2.8rem;
             font-size: 0.95rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 16px;
-            background: white;
-            transition: all 0.2s ease;
-            color: #1e293b;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            background: #ffffff;
+            transition: all 0.3s ease;
+            color: var(--text-dark);
+            font-weight: 500;
         }
 
         .form-control-custom:focus {
             outline: none;
-            border-color: #1e3a5f;
-            box-shadow: 0 0 0 4px rgba(30, 58, 95, 0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-light);
+            background: #ffffff;
         }
 
         .form-control-custom:focus + .input-icon {
-            color: #1e3a5f;
+            color: var(--primary);
         }
 
         .form-control-custom::placeholder {
             color: #94a3b8;
-            font-weight: 300;
+            font-weight: 400;
         }
 
         /* Password toggle */
         .password-toggle {
             position: absolute;
-            right: 1rem;
+            right: 0.5rem;
             top: 50%;
             transform: translateY(-50%);
             cursor: pointer;
             color: #94a3b8;
             transition: color 0.2s ease;
             z-index: 4;
-            padding: 0.25rem;
+            padding: 0.5rem;
+            border-radius: 8px;
         }
 
         .password-toggle:hover {
-            color: #1e3a5f;
+            color: var(--primary);
+            background: var(--primary-light);
         }
 
         /* Checkbox styling */
@@ -215,150 +216,145 @@
         .form-check-input-custom {
             width: 1.2rem;
             height: 1.2rem;
-            border-radius: 6px;
+            border-radius: 4px;
             border: 2px solid #cbd5e1;
             cursor: pointer;
             transition: all 0.2s ease;
+            appearance: none;
+            display: grid;
+            place-content: center;
+            background-color: white;
+            position: relative;
+        }
+
+        .form-check-input-custom::before {
+            content: "";
+            width: 0.65em;
+            height: 0.65em;
+            transform: scale(0);
+            transition: 120ms transform ease-in-out;
+            box-shadow: inset 1em 1em white;
+            background-color: white;
+            transform-origin: center;
+            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
         }
 
         .form-check-input-custom:checked {
-            background-color: #1e3a5f;
-            border-color: #1e3a5f;
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .form-check-input-custom:checked::before {
+            transform: scale(1);
         }
 
         .form-check-label-custom {
             color: #475569;
             font-size: 0.9rem;
-            font-weight: 400;
+            font-weight: 600;
             cursor: pointer;
         }
 
         /* Button styling */
         .btn-login {
-            background: linear-gradient(135deg, #1e3a5f, #2c5a8c);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             border: none;
-            border-radius: 16px;
-            padding: 1rem;
-            font-weight: 600;
-            font-size: 0.95rem;
+            border-radius: 12px;
+            padding: 0.85rem;
+            font-weight: 700;
+            font-size: 1rem;
             width: 100%;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
             overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(30, 58, 95, 0.2);
+            box-shadow: 0 4px 10px rgba(19, 127, 236, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px -5px rgba(30, 58, 95, 0.4);
-            background: linear-gradient(135deg, #1e3a5f, #2c5a8c);
+            box-shadow: 0 8px 16px rgba(19, 127, 236, 0.4);
+            background: linear-gradient(135deg, #2b8ff4, var(--primary));
         }
 
         .btn-login:active {
             transform: translateY(0);
-            box-shadow: 0 2px 4px -1px rgba(30, 58, 95, 0.2);
+            box-shadow: 0 2px 4px rgba(19, 127, 236, 0.2);
         }
 
         .btn-login i {
-            margin-right: 0.5rem;
             font-size: 1.1rem;
         }
 
         /* Alert styling */
         .alert-custom {
-            background: #fee2e2;
-            border: 2px solid #fecaca;
-            border-radius: 16px;
-            padding: 1rem;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 12px;
+            padding: 0.8rem 1rem;
             margin-bottom: 1.5rem;
             display: flex;
             align-items: center;
             gap: 0.75rem;
             color: #991b1b;
-            font-size: 0.9rem;
-            font-weight: 500;
+            font-size: 0.85rem;
+            font-weight: 600;
         }
 
         .alert-custom i {
             font-size: 1.1rem;
-            color: #dc2626;
+            color: #ef4444;
         }
 
         /* Footer */
         .login-footer {
             text-align: center;
-            margin-top: 1.5rem;
-            color: #64748b;
-            font-size: 0.8rem;
-            font-weight: 400;
+            margin-top: 2rem;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            font-weight: 500;
         }
 
         /* Additional info */
         .login-info {
             text-align: center;
-            margin-top: 2rem;
-            color: #475569;
+            margin-top: 1.5rem;
+            color: #64748b;
             font-size: 0.85rem;
+            font-weight: 500;
         }
 
         .login-info a {
-            color: #1e3a5f;
+            color: var(--primary);
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 700;
             transition: color 0.2s ease;
         }
 
         .login-info a:hover {
-            color: #2c5a8c;
+            color: var(--primary-dark);
             text-decoration: underline;
         }
 
-        /* Responsive adjustments */
         @media (max-width: 480px) {
             .login-card {
-                padding: 1.5rem;
-            }
-
-            .logo-wrapper {
-                width: 64px;
-                height: 64px;
+                padding: 2rem 1.5rem;
                 border-radius: 20px;
             }
 
-            .logo-wrapper img {
-                font-size: 2rem;
+            .logo-wrapper {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
             }
 
             .login-header h4 {
-                font-size: 1.25rem;
-            }
-
-            /* Mobile background fix - full screen */
-            .background {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-            }
-
-            .bg-image {
-                background-size: cover;
-                background-position: center center;
-                width: 100%;
-                height: 100%;
-            }
-
-            .bg-gradient {
-                width: 100%;
-                height: 100%;
-            }
-
-            .grid-pattern {
-                width: 100%;
-                height: 100%;
+                font-size: 1.3rem;
             }
         }
     </style>
@@ -367,8 +363,6 @@
     <!-- Background Elements -->
     <div class="background">
         <div class="bg-image"></div>
-        <div class="bg-gradient"></div>
-        <div class="grid-pattern"></div>
     </div>
 
     <div class="login-container">
@@ -376,16 +370,17 @@
             <!-- Header -->
             <div class="login-header">
                 <div class="logo-wrapper">
-                    <img src="/img/logo.jpeg" alt="Logo PT Primatex">
+                    <!-- Text logo instead of image for cleaner aesthetic -->
+                    <span>PT</span>
                 </div>
                 <h4>PT. Primatexco Indonesia</h4>
-                <p>Sistem Potongan Gaji</p>
+                <p>Portal e-Slip & Potongan Gaji</p>
             </div>
 
             <!-- Error Alert -->
             @if($errors->any())
                 <div class="alert-custom">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <i class="bi bi-x-circle-fill"></i>
                     <span>{{ $errors->first() }}</span>
                 </div>
             @endif
@@ -396,14 +391,14 @@
 
                 <!-- Username Field -->
                 <div class="input-group-custom">
-                    <label class="form-label">Username</label>
-                    <div style="position: relative;">
+                    <label class="form-label" for="usernameInput">Username / NIK</label>
+                    <div>
                         <i class="bi bi-person input-icon"></i>
                         <input type="text" 
                                class="form-control-custom" 
                                name="username" 
                                value="{{ old('username') }}" 
-                               placeholder="Masukkan username"
+                               placeholder="Masukkan username Anda"
                                required 
                                autofocus
                                id="usernameInput">
@@ -412,16 +407,16 @@
 
                 <!-- Password Field -->
                 <div class="input-group-custom">
-                    <label class="form-label">Password</label>
-                    <div style="position: relative;">
-                        <i class="bi bi-lock input-icon"></i>
+                    <label class="form-label" for="passwordInput">Password</label>
+                    <div>
+                        <i class="bi bi-shield-lock input-icon"></i>
                         <input type="password" 
                                class="form-control-custom" 
                                name="password" 
-                               placeholder="Masukkan password" 
+                               placeholder="Masukkan password Anda" 
                                required 
                                id="passwordInput">
-                        <span class="password-toggle" onclick="togglePassword()">
+                        <span class="password-toggle" onclick="togglePassword()" title="Tampilkan/Sembunyikan Password">
                             <i class="bi bi-eye" id="toggleIcon"></i>
                         </span>
                     </div>
@@ -430,25 +425,25 @@
                 <!-- Remember Me -->
                 <div class="form-check-custom">
                     <input type="checkbox" class="form-check-input-custom" name="remember" id="remember">
-                    <label class="form-check-label-custom" for="remember">Ingat saya</label>
+                    <label class="form-check-label-custom" for="remember">Ingat perangkat ini</label>
                 </div>
 
                 <!-- Submit Button -->
                 <button type="submit" class="btn-login">
-                    <i class="bi bi-box-arrow-in-right"></i>
                     Masuk ke Sistem
+                    <i class="bi bi-arrow-right-short fs-4"></i>
                 </button>
             </form>
 
             <!-- Additional Links -->
             <div class="login-info">
-                <p>Lupa password? Hubungi <a href="#">Administrator</a></p>
+                <span>Lupa password? </span><a href="#">Hubungi Administrator</a>
             </div>
         </div>
 
         <!-- Footer -->
         <div class="login-footer">
-            © {{ date('Y') }} PT Primatex Indonesia. All rights reserved.
+            &copy; {{ date('Y') }} PT Primatex Indonesia.<br>All rights reserved.
         </div>
     </div>
 
@@ -459,23 +454,12 @@
             
             if (input.type === 'password') {
                 input.type = 'text';
-                icon.className = 'bi bi-eye-slash';
+                icon.className = 'bi bi-eye-slash-fill';
             } else {
                 input.type = 'password';
                 icon.className = 'bi bi-eye';
             }
         }
-
-        // Optional: Add smooth validation feedback
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            const username = document.getElementById('usernameInput');
-            const password = document.getElementById('passwordInput');
-            
-            if (!username.value.trim() || !password.value.trim()) {
-                e.preventDefault();
-                // You can add custom validation feedback here
-            }
-        });
     </script>
 </body>
 </html>

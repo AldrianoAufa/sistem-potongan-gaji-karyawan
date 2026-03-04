@@ -47,6 +47,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
 
     Route::get('/import', [ImportController::class, 'showForm'])->name('import.form');
     Route::post('/import', [ImportController::class, 'process'])->name('import.process');
+    Route::post('/import/execute', [ImportController::class, 'execute'])->name('import.execute');
     Route::post('/import/collective', [ImportController::class, 'collectiveStore'])->name('import.collective');
 
     Route::get('/import-karyawan', [ImportkaryawanController::class, 'showForm'])->name('import-karyawan.form');
