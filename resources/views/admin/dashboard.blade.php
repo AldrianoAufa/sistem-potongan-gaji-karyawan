@@ -13,7 +13,7 @@
             </ol>
         </nav>
     </div>
-    <div class="d-none d-sm-flex px-3 py-2 bg-white rounded-3 shadow-sm border border-light align-items-center" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">
+    <div class="d-none d-sm-flex px-3 py-2 bg-white rounded border align-items-center" style="font-size: 0.82rem; font-weight: 600; color: #64748b;">
         <i class="bi bi-calendar3 me-2 text-primary"></i>{{ now()->translatedFormat('l, d F Y') }}
     </div>
 </div>
@@ -140,69 +140,66 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
-    const ctx = document.getElementById('chartPotongan').getContext('2d');
-    const grafikData = @json($grafikData);
+// Lazy load Chart.js setelah halaman selesai
+window.addEventListener('load', function() {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js';
+    script.onload = function() {
+        const canvas = document.getElementById('chartPotongan');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const grafikData = @json($grafikData);
 
-    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-    gradient.addColorStop(0, 'rgba(19, 127, 236, 0.85)');
-    gradient.addColorStop(1, 'rgba(19, 127, 236, 0.1)');
-
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: grafikData.map(d => d.label),
-            datasets: [{
-                label: 'Total Potongan (Rp)',
-                data: grafikData.map(d => d.total),
-                backgroundColor: gradient,
-                hoverBackgroundColor: '#0f66be',
-                borderRadius: 8,
-                borderSkipped: false,
-                barPercentage: 0.6
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: 'rgba(30, 41, 59, 0.95)',
-                    padding: 12,
-                    titleFont: { family: 'Manrope', size: 14, weight: 'bold' },
-                    bodyFont: { family: 'Manrope', size: 13 },
-                    displayColors: false,
-                    callbacks: {
-                        label: function(ctx) {
-                            return 'Rp ' + ctx.parsed.y.toLocaleString('id-ID');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: grafikData.map(d => d.label),
+                datasets: [{
+                    label: 'Total Potongan (Rp)',
+                    data: grafikData.map(d => d.total),
+                    backgroundColor: 'rgba(19, 127, 236, 0.75)',
+                    hoverBackgroundColor: '#0f66be',
+                    borderRadius: 6,
+                    borderSkipped: false,
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 600 },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        displayColors: false,
+                        callbacks: {
+                            label: function(c) {
+                                return 'Rp ' + c.parsed.y.toLocaleString('id-ID');
+                            }
                         }
                     }
-                }
-            },
-            scales: {
-                x: {
-                    grid: { display: false, drawBorder: false },
-                    ticks: { font: { family: 'Manrope', weight: '600' }, color: '#64748b' }
                 },
-                y: {
-                    grid: { color: '#f1f5f9', drawBorder: false },
-                    border: { display: false },
-                    beginAtZero: true,
-                    ticks: {
-                        font: { family: 'Manrope', weight: '500' },
-                        color: '#94a3b8',
-                        padding: 10,
-                        callback: function(value) {
-                            if (value >= 1000000) return 'Rp ' + (value/1000000).toFixed(1) + 'jt';
-                            if (value >= 1000) return 'Rp ' + (value/1000).toFixed(0) + 'rb';
-                            return 'Rp ' + value;
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#64748b' } },
+                    y: {
+                        grid: { color: '#f1f5f9' },
+                        border: { display: false },
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#94a3b8',
+                            callback: function(v) {
+                                if (v >= 1000000) return 'Rp '+(v/1000000).toFixed(1)+'jt';
+                                if (v >= 1000)    return 'Rp '+(v/1000).toFixed(0)+'rb';
+                                return 'Rp '+v;
+                            }
                         }
                     }
                 }
             }
-        }
-    });
+        });
+    };
+    document.head.appendChild(script);
+});
 </script>
 @endpush

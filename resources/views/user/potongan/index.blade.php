@@ -8,14 +8,39 @@
         <p class="text-muted">Riwayat potongan gaji Anda</p>
     </div>
     <div class="d-flex gap-2">
-        <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
-            <i class="bi bi-printer me-1"></i>Cetak
-        </button>
         <a href="{{ route('user.dashboard') }}" class="btn btn-secondary btn-sm">
             <i class="bi bi-arrow-left me-1"></i>Kembali
         </a>
     </div>
 </div>
+
+{{-- Slip Per Periode --}}
+@if(isset($periodeList) && $periodeList->count() > 0)
+<div class="card card-custom mb-3">
+    <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-file-earmark-text text-primary"></i>
+        <strong>Cetak Slip Bukti Potongan per Periode</strong>
+    </div>
+    <div class="card-body py-2">
+        <div class="d-flex flex-wrap gap-2">
+            @php
+                $bulanNames = [1=>'Jan',2=>'Feb',3=>'Mar',4=>'Apr',5=>'Mei',6=>'Jun',
+                               7=>'Jul',8=>'Ags',9=>'Sep',10=>'Okt',11=>'Nov',12=>'Des'];
+                $bulanFull  = [1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',
+                               7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember'];
+            @endphp
+            @foreach($periodeList as $p)
+            <a href="{{ route('user.potongan.slip', [$p->bulan, $p->tahun]) }}"
+               class="btn btn-outline-primary btn-sm"
+               title="Lihat slip {{ $bulanFull[$p->bulan] }} {{ $p->tahun }}">
+                <i class="bi bi-receipt me-1"></i>
+                {{ $bulanNames[$p->bulan] }} {{ $p->tahun }}
+            </a>
+            @endforeach
+        </div>
+    </div>
+</div>
+@endif
 
 <!-- Filter -->
 <div class="card card-custom mb-3">
@@ -68,7 +93,7 @@
                         <th>Bulan/Tahun</th>
                         <th>Jenis Potongan</th>
                         <th class="text-end">Jumlah</th>
-                        <th>Detail</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -82,13 +107,17 @@
                         </td>
                         <td class="text-end fw-semibold">Rp {{ number_format($item->jumlah_potongan, 0, ',', '.') }}</td>
                         <td>
-                            @if($item->data_rinci)
-                            <a href="{{ route('user.potongan.show', $item) }}" class="btn btn-outline-info btn-sm">
-                                <i class="bi bi-eye"></i> Detail
-                            </a>
-                            @else
-                            <span class="text-muted" style="font-size: 0.8rem;">—</span>
-                            @endif
+                            <div class="d-flex gap-1">
+                                @if($item->data_rinci)
+                                <a href="{{ route('user.potongan.show', $item) }}" class="btn btn-outline-info btn-sm" title="Detail">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                @endif
+                                <a href="{{ route('user.potongan.slip', [$item->bulan, $item->tahun]) }}"
+                                   class="btn btn-outline-primary btn-sm" title="Slip {{ $item->nama_bulan }} {{ $item->tahun }}">
+                                    <i class="bi bi-receipt"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     @empty
@@ -103,14 +132,4 @@
     @endif
 </div>
 
-@push('styles')
-<style>
-    @media print {
-        .sidebar, .navbar, .page-header .btn, .page-header .d-flex.gap-2,
-        .card-custom.mb-3, .card-footer, .btn-outline-info { display: none !important; }
-        .main-content { margin-left: 0 !important; padding: 0 !important; }
-        .page-header { margin-bottom: 10px !important; }
-    }
-</style>
-@endpush
 @endsection

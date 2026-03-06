@@ -69,4 +69,5 @@ Route::prefix('user')->middleware(['auth', 'user'])->name('user.')->group(functi
     Route::get('/dashboard', [UserDashboard::class, 'index'])->name('dashboard');
     Route::get('/potongan', [PotonganController::class, 'index'])->name('potongan.index');
     Route::get('/potongan/{inputBulanan}', [PotonganController::class, 'show'])->name('potongan.show');
+    Route::get('/slip/{bulan}/{tahun}', [PotonganController::class, 'slip'])->name('potongan.slip');
 });

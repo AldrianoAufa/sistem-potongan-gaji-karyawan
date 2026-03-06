@@ -13,9 +13,15 @@
         @endif
     </div>
     @if($karyawan && $potonganBulanIni->count() > 0)
-    <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
-        <i class="bi bi-printer me-1"></i>Cetak
-    </button>
+    <div class="d-flex gap-2">
+        <a href="{{ route('user.potongan.slip', [now()->month, now()->year]) }}"
+           class="btn btn-primary btn-sm">
+            <i class="bi bi-receipt me-1"></i>Slip Bulan Ini
+        </a>
+        <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+            <i class="bi bi-printer me-1"></i>Cetak
+        </button>
+    </div>
     @endif
 </div>
 
@@ -144,102 +150,85 @@
 
 @push('scripts')
 @if($karyawan)
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
-    // Line Chart - Tren 6 Bulan
-    const ctx = document.getElementById('chartUser').getContext('2d');
-    const data = @json($grafikData);
-
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: data.map(d => d.label),
-            datasets: [{
-                label: 'Total Potongan (Rp)',
-                data: data.map(d => d.total),
-                borderColor: '#4A90D9',
-                backgroundColor: 'rgba(74, 144, 217, 0.1)',
-                fill: true,
-                tension: 0.4,
-                pointRadius: 5,
-                pointHoverRadius: 8,
-                pointBackgroundColor: '#4A90D9',
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(ctx) {
-                            return 'Rp ' + ctx.parsed.y.toLocaleString('id-ID');
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            if (value >= 1000000) return 'Rp ' + (value/1000000).toFixed(1) + 'jt';
-                            if (value >= 1000) return 'Rp ' + (value/1000).toFixed(0) + 'rb';
-                            return 'Rp ' + value;
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    // Pie Chart - Komposisi Bulan Ini
-    @if($potonganBulanIni->count() > 0)
-    const pieCtx = document.getElementById('chartPie').getContext('2d');
-    const pieData = @json($pieChartData);
-
-    new Chart(pieCtx, {
-        type: 'doughnut',
-        data: {
-            labels: pieData.map(d => d.label),
-            datasets: [{
-                data: pieData.map(d => d.value),
-                backgroundColor: pieData.map(d => d.color),
-                borderWidth: 2,
-                borderColor: '#fff',
-                hoverOffset: 8,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        padding: 12,
-                        usePointStyle: true,
-                        pointStyle: 'circle',
-                        font: { size: 11 }
-                    }
+window.addEventListener('load', function() {
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js';
+    s.onload = function() {
+        // Line Chart
+        var ctx = document.getElementById('chartUser');
+        if (ctx) {
+            var grafikData = @json($grafikData);
+            new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: grafikData.map(function(d){ return d.label; }),
+                    datasets: [{
+                        label: 'Total Potongan (Rp)',
+                        data: grafikData.map(function(d){ return d.total; }),
+                        borderColor: '#137fec',
+                        backgroundColor: 'rgba(19,127,236,0.08)',
+                        fill: true, tension: 0.4,
+                        pointRadius: 4, pointHoverRadius: 7,
+                        pointBackgroundColor: '#137fec',
+                    }]
                 },
-                tooltip: {
-                    callbacks: {
-                        label: function(ctx) {
-                            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                            const pct = ((ctx.parsed / total) * 100).toFixed(1);
-                            return ctx.label + ': Rp ' + ctx.parsed.toLocaleString('id-ID') + ' (' + pct + '%)';
-                        }
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    animation: { duration: 500 },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: function(c){ return 'Rp '+c.parsed.y.toLocaleString('id-ID'); } } }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#64748b' } },
+                        y: { beginAtZero: true, ticks: { color: '#94a3b8', callback: function(v){
+                            if(v>=1000000) return 'Rp '+(v/1000000).toFixed(1)+'jt';
+                            if(v>=1000)    return 'Rp '+(v/1000).toFixed(0)+'rb';
+                            return 'Rp '+v;
+                        }}}
                     }
                 }
-            }
+            });
         }
-    });
-    @endif
+
+        // Pie Chart
+        @if($potonganBulanIni->count() > 0)
+        var pieEl = document.getElementById('chartPie');
+        if (pieEl) {
+            var pieData = @json($pieChartData);
+            new Chart(pieEl.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: pieData.map(function(d){ return d.label; }),
+                    datasets: [{
+                        data: pieData.map(function(d){ return d.value; }),
+                        backgroundColor: pieData.map(function(d){ return d.color; }),
+                        borderWidth: 2, borderColor: '#fff', hoverOffset: 6,
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    animation: { duration: 500 },
+                    plugins: {
+                        legend: { position:'bottom', labels:{ padding:10, usePointStyle:true, pointStyle:'circle', font:{size:10} } },
+                        tooltip: { callbacks: { label: function(c){
+                            var tot = c.dataset.data.reduce(function(a,b){return a+b;},0);
+                            var pct = ((c.parsed/tot)*100).toFixed(1);
+                            return c.label+': Rp '+c.parsed.toLocaleString('id-ID')+' ('+pct+'%)';
+                        }}}
+                    }
+                }
+            });
+        }
+        @endif
+    };
+    document.head.appendChild(s);
+});
 </script>
 @endif
 @endpush
+
 
 @push('styles')
 <style>
