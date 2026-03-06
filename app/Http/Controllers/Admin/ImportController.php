@@ -18,8 +18,53 @@ class ImportController extends Controller
         'PINJ', 'AWAL', 'BULN', 'KALI', 'PKOK', 'RPBG', 'ANGS', 'SALD'
     ];
 
+    /**
+     * Cek apakah sudah ada data input bulanan untuk periode tertentu (AJAX)
+     */
+    public function checkPeriod(Request $request)
+    {
+        $bulan = (int) $request->bulan;
+        $tahun = (int) $request->tahun;
+
+        if (!$bulan || !$tahun) {
+            return response()->json(['exists' => false, 'count' => 0]);
+        }
+
+        $count = InputBulanan::where('bulan', $bulan)->where('tahun', $tahun)->count();
+
+        return response()->json([
+            'exists' => $count > 0,
+            'count'  => $count,
+        ]);
+    }
+
     public function showForm(Request $request)
     {
+        // Cek apakah ada sesi import yang belum selesai
+        $activeImport = null;
+        $activeCacheKey = session('import_active_cache_key');
+        if ($activeCacheKey) {
+            $cachedData = Cache::get($activeCacheKey);
+            if ($cachedData) {
+                $bulanNames = [
+                    1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',
+                    5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',
+                    9=>'September',10=>'Oktober',11=>'November',12=>'Desember'
+                ];
+                $activeImport = [
+                    'cache_key'    => $activeCacheKey,
+                    'total'        => count($cachedData['rows']),
+                    'bulan_nama'   => $bulanNames[$cachedData['bulan']] ?? '-',
+                    'tahun'        => $cachedData['tahun'],
+                    'total_warning'=> count(array_filter($cachedData['rows'], fn($r) => $r['has_warning'])),
+                    'expires_at'   => session('import_active_expires_at'),
+                ];
+            } else {
+                // Cache sudah kadaluwarsa, hapus session
+                session()->forget(['import_active_cache_key', 'import_active_expires_at']);
+            }
+        }
+
         $departemenList = \App\Models\Departemen::with(['karyawan' => function ($q) {
             $q->orderBy('nama')->with('jabatan');
         }])->withCount('karyawan')->orderBy('nama_departemen')->get();
@@ -46,7 +91,7 @@ class ImportController extends Controller
 
         return view('admin.import.index', compact(
             'departemenList', 'jenisPotonganAll', 'bulanOptions',
-            'selectedPotongan', 'karyawanKolektif'
+            'selectedPotongan', 'karyawanKolektif', 'activeImport'
         ));
     }
 
@@ -95,16 +140,17 @@ class ImportController extends Controller
         foreach($karyawans as $k) {
             $karyawanMap[$k->kode_karyawan] = ['id' => $k->id, 'nama' => $k->nama];
         }
-        $jenisPotonganMap = JenisPotongan::pluck('id', 'kode_potongan')->toArray();
 
-        $gagal = 0;
-        $errors = [];
-        $warnings = [];
+        $jenisPotonganMap    = JenisPotongan::pluck('id', 'kode_potongan')->toArray();
+        $jenisPotonganNamaMap = JenisPotongan::pluck('nama_potongan', 'id')->toArray();
+
+        $gagal     = 0;
+        $errors    = [];
         $validData = [];
 
         foreach ($rows as $rowIndex => $row) {
             $rowValues = array_values($row);
-            $rowNum = $rowIndex + 2; // +2 karena header = baris 1
+            $rowNum    = $rowIndex + 2; // +2 karena header = baris 1
 
             // Skip empty rows
             if (empty(array_filter($rowValues, fn($v) => $v !== null && $v !== ''))) {
@@ -149,7 +195,6 @@ class ImportController extends Controller
             }
 
             // Build data_rinci from loan columns
-            $dataRinci = null;
             $pinj = $rowValues[$headerMap['PINJ']] ?? null;
             $awal = $rowValues[$headerMap['AWAL']] ?? null;
             $buln = $rowValues[$headerMap['BULN']] ?? null;
@@ -157,9 +202,7 @@ class ImportController extends Controller
             $pkok = $rowValues[$headerMap['PKOK']] ?? null;
             $rpbg = $rowValues[$headerMap['RPBG']] ?? null;
             $sald = $rowValues[$headerMap['SALD']] ?? null;
-
-            $rinciValues = compact('pinj', 'awal', 'buln', 'kali', 'pkok', 'rpbg', 'sald');
-            $rinciValues = array_filter($rinciValues, fn($v) => $v !== null && $v !== '' && $v !== 0);
+            $nmpr = trim($rowValues[$headerMap['NMPR']] ?? '');
 
             $angsFloat = is_numeric($angs) ? (float) $angs : 0;
             $pkokFloat = is_numeric($pkok) ? (float) $pkok : 0;
@@ -167,109 +210,234 @@ class ImportController extends Controller
             $awalFloat = is_numeric($awal) ? (float) $awal : 0;
             $saldFloat = is_numeric($sald) ? (float) $sald : 0;
 
-            if (!empty($rinciValues)) {
-                $dataRinci = [
-                    'PINJ' => is_numeric($pinj) ? (float) $pinj : 0,
-                    'AWAL' => $awalFloat,
-                    'BULN' => is_numeric($buln) ? (int) $buln : 0,
-                    'KALI' => is_numeric($kali) ? (int) $kali : 0,
-                    'PKOK' => $pkokFloat,
-                    'RPBG' => $rpbgFloat,
-                    'SALD' => $saldFloat,
-                ];
-            }
+            $dataRinci = [
+                'PINJ' => is_numeric($pinj) ? (float) $pinj : 0,
+                'AWAL' => $awalFloat,
+                'BULN' => is_numeric($buln) ? (int) $buln : 0,
+                'KALI' => is_numeric($kali) ? (int) $kali : 0,
+                'PKOK' => $pkokFloat,
+                'RPBG' => $rpbgFloat,
+                'SALD' => $saldFloat,
+            ];
 
-            // --- Validasi Perhitungan / Kalkulasi ---
+            // Hitung angsuran berdasarkan sistem: PKOK + RPBG
             $hitungAngs = $pkokFloat + $rpbgFloat;
-            $hitungSald = $awalFloat - $pkokFloat;
-            $hasWarning = false;
-            $warningMsg = [];
 
-            // Toleransi perbedaan (misal koma) 1 Rupiah
-            if (abs($angsFloat - $hitungAngs) > 1 && $pkokFloat > 0) {
-                $hasWarning = true;
-                $warningMsg[] = "Angsuran Excel (Rp " . number_format($angsFloat, 0, ',', '.') . ") berbeda dari hitungan sistem Pokok+Bunga (Rp " . number_format($hitungAngs, 0, ',', '.') . ")";
-            }
+            // Cek apakah ada warning perhitungan
+            $hasWarning = (abs($angsFloat - $hitungAngs) > 1 && $pkokFloat > 0);
 
-            if (abs($saldFloat - $hitungSald) > 1 && $awalFloat > 0 && $saldFloat > 0) {
-                 $hasWarning = true;
-                 $warningMsg[] = "Saldo Akhir (Rp " . number_format($saldFloat, 0, ',', '.') . ") tidak cocok dgn Saldo Awal - Pokok (Rp " . number_format($hitungSald, 0, ',', '.') . ")";
-            }
-
-            if ($hasWarning) {
-                $warnings[] = [
-                    'baris' => $rowNum,
-                    'kode'  => $cust,
-                    'nama'  => $karyawanMap[$cust]['nama'],
-                    'excel_angs' => $angsFloat,
-                    'sistem_angs' => $hitungAngs,
-                    'pesan' => implode(' | ', $warningMsg)
-                ];
-            }
+            $jenisPotonganId = $jenisPotonganMap[$grup];
 
             $validData[] = [
-                'karyawan_id' => $karyawanMap[$cust]['id'],
-                'jenis_potongan_id' => $jenisPotonganMap[$grup],
-                'jumlah_potongan' => $angsFloat,
-                'jumlah_koreksi' => $hitungAngs,
-                'data_rinci' => $dataRinci,
-                'has_warning' => $hasWarning
+                'baris'             => $rowNum,
+                'karyawan_id'       => $karyawanMap[$cust]['id'],
+                'kode_karyawan'     => $cust,
+                'nama_karyawan'     => $karyawanMap[$cust]['nama'],
+                'jenis_potongan_id' => $jenisPotonganId,
+                'nama_potongan'     => $jenisPotonganNamaMap[$jenisPotonganId] ?? $grup,
+                'kode_potongan'     => $grup,
+                'nama_produk'       => $nmpr,
+                // Nilai dari Excel (asli)
+                'excel_angs'        => $angsFloat,
+                // Nilai yang akan tersimpan (bisa diubah user lewat preview)
+                'jumlah_potongan'   => $hitungAngs > 0 ? $hitungAngs : $angsFloat,
+                // Komponen yang bisa diedit
+                'pkok'              => $pkokFloat,
+                'rpbg'              => $rpbgFloat,
+                // Status
+                'has_warning'       => $hasWarning,
+                // Data rinci (akan diupdate bersamaan jika pkok diubah)
+                'data_rinci'        => $dataRinci,
             ];
         }
 
         // Cache valid data untuk proses execute nanti (expired in 60 mins)
         $cacheKey = 'import_data_' . auth()->id() . '_' . time();
-        Cache::put($cacheKey, $validData, now()->addMinutes(60));
+        $expiresAt = now()->addMinutes(60);
+        Cache::put($cacheKey, [
+            'rows'   => $validData,
+            'bulan'  => $bulan,
+            'tahun'  => $tahun,
+            'gagal'  => $gagal,
+            'errors' => $errors,
+        ], $expiresAt);
 
-        // Tampilkan halaman konfirmasi (preview)
-        $totalValid = count($validData);
-        return view('admin.import.preview', compact('gagal', 'errors', 'warnings', 'totalValid', 'bulan', 'tahun', 'cacheKey'));
+        // Simpan cache_key di session agar bisa di-resume jika user keluar halaman
+        session([
+            'import_active_cache_key'  => $cacheKey,
+            'import_active_expires_at' => $expiresAt->format('H:i'),
+        ]);
+
+        // Redirect ke halaman preview (GET) agar browser Back button tetap bisa load dari cache
+        return redirect()->route('admin.import.preview', ['key' => $cacheKey]);
+    }
+
+    /**
+     * Tampilkan halaman preview dari cache (GET — aman untuk Back/Refresh)
+     */
+    public function showPreview(Request $request)
+    {
+        $cacheKey = $request->query('key');
+
+        if (!$cacheKey) {
+            return redirect()->route('admin.import.form')
+                ->with('error', 'Parameter preview tidak valid.');
+        }
+
+        $cached = Cache::get($cacheKey);
+        if (!$cached) {
+            session()->forget(['import_active_cache_key', 'import_active_expires_at']);
+            return redirect()->route('admin.import.form')
+                ->with('error', 'Sesi preview telah kedaluwarsa (lebih dari 60 menit). Silakan upload ulang file Excel.');
+        }
+
+        $validData    = $cached['rows'];
+        $bulan        = $cached['bulan'];
+        $tahun        = $cached['tahun'];
+        $gagal        = $cached['gagal']  ?? 0;
+        $errors       = $cached['errors'] ?? [];
+        $totalValid   = count($validData);
+        $totalWarning = count(array_filter($validData, fn($d) => $d['has_warning']));
+
+        return view('admin.import.preview', compact(
+            'gagal', 'errors', 'validData', 'totalValid', 'totalWarning',
+            'bulan', 'tahun', 'cacheKey'
+        ));
+    }
+
+    /**
+     * Lanjutkan preview dari cache (resume session) — redirect ke showPreview
+     */
+    public function resume()
+    {
+        $cacheKey = session('import_active_cache_key');
+        if (!$cacheKey) {
+            return redirect()->route('admin.import.form')
+                ->with('error', 'Tidak ada sesi import yang aktif.');
+        }
+
+        $cached = Cache::get($cacheKey);
+        if (!$cached) {
+            session()->forget(['import_active_cache_key', 'import_active_expires_at']);
+            return redirect()->route('admin.import.form')
+                ->with('error', 'Sesi import telah kedaluwarsa. Silakan upload ulang file Excel.');
+        }
+
+        // Redirect ke halaman preview GET agar data persist
+        return redirect()->route('admin.import.preview', ['key' => $cacheKey]);
+    }
+
+    /**
+     * Update nilai PKOK sebuah baris di cache (AJAX)
+     */
+    public function updateRow(Request $request)
+    {
+        $request->validate([
+            'cache_key' => 'required|string',
+            'index'     => 'required|integer|min:0',
+            'pkok'      => 'required|numeric|min:0',
+        ]);
+
+        $cached = Cache::get($request->cache_key);
+        if (!$cached) {
+            return response()->json(['success' => false, 'message' => 'Sesi import kedaluwarsa.'], 422);
+        }
+
+        $index = (int) $request->index;
+        if (!isset($cached['rows'][$index])) {
+            return response()->json(['success' => false, 'message' => 'Baris tidak ditemukan.'], 422);
+        }
+
+        $pkokBaru  = (float) $request->pkok;
+        $rpbg      = (float) $cached['rows'][$index]['rpbg'];
+        $angsBaru  = $pkokBaru + $rpbg;
+
+        $cached['rows'][$index]['pkok']             = $pkokBaru;
+        $cached['rows'][$index]['jumlah_potongan']  = $angsBaru;
+        $cached['rows'][$index]['data_rinci']['PKOK'] = $pkokBaru;
+        // Hitung ulang warning
+        $excelAngs    = $cached['rows'][$index]['excel_angs'];
+        $cached['rows'][$index]['has_warning'] = (abs($excelAngs - $angsBaru) > 1 && $pkokBaru > 0);
+
+        Cache::put($request->cache_key, $cached, now()->addMinutes(60));
+
+        return response()->json([
+            'success'          => true,
+            'pkok'             => $pkokBaru,
+            'rpbg'             => $rpbg,
+            'jumlah_potongan'  => $angsBaru,
+            'has_warning'      => $cached['rows'][$index]['has_warning'],
+        ]);
+    }
+
+    /**
+     * Hapus sebuah baris dari cache (AJAX)
+     */
+    public function deleteRow(Request $request)
+    {
+        $request->validate([
+            'cache_key' => 'required|string',
+            'index'     => 'required|integer|min:0',
+        ]);
+
+        $cached = Cache::get($request->cache_key);
+        if (!$cached) {
+            return response()->json(['success' => false, 'message' => 'Sesi import kedaluwarsa.'], 422);
+        }
+
+        $index = (int) $request->index;
+        if (!isset($cached['rows'][$index])) {
+            return response()->json(['success' => false, 'message' => 'Baris tidak ditemukan.'], 422);
+        }
+
+        // Hapus baris dan re-index
+        array_splice($cached['rows'], $index, 1);
+        Cache::put($request->cache_key, $cached, now()->addMinutes(60));
+
+        return response()->json([
+            'success'    => true,
+            'total_rows' => count($cached['rows']),
+        ]);
     }
 
     public function execute(Request $request)
     {
         $request->validate([
             'cache_key' => 'required',
-            'action' => 'required|in:koreksi,ignore,batal',
-            'bulan' => 'required|integer',
-            'tahun' => 'required|integer',
+            'bulan'     => 'required|integer',
+            'tahun'     => 'required|integer',
         ]);
 
         if ($request->action === 'batal') {
             Cache::forget($request->cache_key);
+            session()->forget(['import_active_cache_key', 'import_active_expires_at']);
             return redirect()->route('admin.import.form')->with('info', 'Import dibatalkan oleh pengguna.');
         }
 
-        $validData = Cache::get($request->cache_key);
-        if (!$validData) {
+        $cached = Cache::get($request->cache_key);
+        if (!$cached) {
             return redirect()->route('admin.import.form')->with('error', 'Sesi import telah kedaluwarsa. Silakan upload file Excel kembali.');
         }
 
-        $berhasil = 0;
-        $diupdate = 0;
+        $validData   = $cached['rows'];
+        $berhasil    = 0;
+        $diupdate    = 0;
         $mappingData = [];
 
         DB::beginTransaction();
 
         try {
             foreach ($validData as $data) {
-                // Jika pilih 'koreksi', pakai hitungan sistem
-                // Jika pilih 'ignore', pakai 'jumlah_potongan' (asli excel)
-                $jumlah_potongan = $data['jumlah_potongan'];
-                if ($request->action === 'koreksi' && $data['has_warning']) {
-                    $jumlah_potongan = $data['jumlah_koreksi'] > 0 ? $data['jumlah_koreksi'] : $data['jumlah_potongan'];
-                }
-
                 $record = InputBulanan::updateOrCreate(
                     [
-                        'karyawan_id' => $data['karyawan_id'],
+                        'karyawan_id'       => $data['karyawan_id'],
                         'jenis_potongan_id' => $data['jenis_potongan_id'],
-                        'bulan' => $request->bulan,
-                        'tahun' => $request->tahun,
+                        'bulan'             => $request->bulan,
+                        'tahun'             => $request->tahun,
                     ],
                     [
-                        'jumlah_potongan' => $jumlah_potongan,
-                        'data_rinci' => $data['data_rinci'],
+                        'jumlah_potongan' => $data['jumlah_potongan'],
+                        'data_rinci'      => $data['data_rinci'],
                     ]
                 );
 
@@ -292,27 +460,28 @@ class ImportController extends Controller
 
             DB::commit();
             Cache::forget($request->cache_key);
+            session()->forget(['import_active_cache_key', 'import_active_expires_at']);
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->route('admin.import.form')->with('error', 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage());
         }
 
-        $gagal = 0;
+        $gagal  = 0;
         $errors = [];
-        $bulan = $request->bulan;
-        $tahun = $request->tahun;
+        $bulan  = $request->bulan;
+        $tahun  = $request->tahun;
         return view('admin.import.result', compact('berhasil', 'diupdate', 'gagal', 'errors', 'bulan', 'tahun'));
     }
 
     public function collectiveStore(Request $request)
     {
         $validated = $request->validate([
-            'jenis_potongan_id' => 'required|exists:jenis_potongan,id',
-            'bulan' => 'required|integer|between:1,12',
-            'tahun' => 'required|integer|min:2020|max:2099',
-            'potongan' => 'required|array',
-            'potongan.*.karyawan_id' => 'required|exists:karyawan,id',
-            'potongan.*.jumlah' => 'nullable|numeric|min:0',
+            'jenis_potongan_id'            => 'required|exists:jenis_potongan,id',
+            'bulan'                        => 'required|integer|between:1,12',
+            'tahun'                        => 'required|integer|min:2020|max:2099',
+            'potongan'                     => 'required|array',
+            'potongan.*.karyawan_id'       => 'required|exists:karyawan,id',
+            'potongan.*.jumlah'            => 'nullable|numeric|min:0',
         ]);
 
         $count = 0;
@@ -320,10 +489,10 @@ class ImportController extends Controller
             if ($item['jumlah'] !== null && $item['jumlah'] > 0) {
                 InputBulanan::updateOrCreate(
                     [
-                        'karyawan_id' => $item['karyawan_id'],
+                        'karyawan_id'       => $item['karyawan_id'],
                         'jenis_potongan_id' => $validated['jenis_potongan_id'],
-                        'bulan' => $validated['bulan'],
-                        'tahun' => $validated['tahun'],
+                        'bulan'             => $validated['bulan'],
+                        'tahun'             => $validated['tahun'],
                     ],
                     [
                         'jumlah_potongan' => $item['jumlah'],

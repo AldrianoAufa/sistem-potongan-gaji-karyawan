@@ -46,9 +46,14 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::post('input-bulanan-bulk', [InputBulananController::class, 'bulkStore'])->name('input-bulanan.bulk-store');
 
     Route::get('/import', [ImportController::class, 'showForm'])->name('import.form');
+    Route::get('/import/check-period', [ImportController::class, 'checkPeriod'])->name('import.check-period');
+    Route::get('/import/resume', [ImportController::class, 'resume'])->name('import.resume');
+    Route::get('/import/preview', [ImportController::class, 'showPreview'])->name('import.preview');
     Route::post('/import', [ImportController::class, 'process'])->name('import.process');
     Route::post('/import/execute', [ImportController::class, 'execute'])->name('import.execute');
     Route::post('/import/collective', [ImportController::class, 'collectiveStore'])->name('import.collective');
+    Route::post('/import/update-row', [ImportController::class, 'updateRow'])->name('import.update-row');
+    Route::post('/import/delete-row', [ImportController::class, 'deleteRow'])->name('import.delete-row');
 
     Route::get('/import-karyawan', [ImportkaryawanController::class, 'showForm'])->name('import-karyawan.form');
     Route::get('/import-karyawan/template', [ImportkaryawanController::class, 'downloadTemplate'])->name('import-karyawan.template');

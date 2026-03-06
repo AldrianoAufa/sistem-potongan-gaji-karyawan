@@ -7,7 +7,75 @@
     <p class="text-muted mb-0">Pilih metode input: Import file Excel atau Input Kolektif per jenis potongan</p>
 </div>
 
+{{-- ===== Banner: Sesi Import Belum Selesai ===== --}}
+@if(isset($activeImport) && $activeImport)
+<div class="mb-4" id="resumeBanner">
+    <div class="d-flex align-items-center gap-3 p-3 rounded-3 position-relative overflow-hidden"
+         style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+                border: 2px solid #3b82f6;">
+        {{-- Pulse icon --}}
+        <div class="position-relative flex-shrink-0">
+            <div style="width:48px; height:48px; border-radius:50%; background:#3b82f6;
+                        display:flex; align-items:center; justify-content:center;">
+                <i class="bi bi-clock-history text-white" style="font-size:1.4rem;"></i>
+            </div>
+            <span style="position:absolute; top:0; right:0; width:12px; height:12px;
+                         border-radius:50%; background:#22c55e; border:2px solid #fff;
+                         animation: pulse-dot 1.5s infinite;"></span>
+        </div>
+
+        {{-- Info --}}
+        <div class="flex-grow-1">
+            <div class="fw-bold" style="color:#1e40af; font-size:0.95rem;">
+                <i class="bi bi-lightning-fill me-1 text-warning"></i>
+                Ada sesi import yang belum selesai!
+            </div>
+            <div class="text-muted mt-1" style="font-size:0.82rem;">
+                <strong class="text-dark">{{ $activeImport['total'] }} baris</strong>
+                data untuk periode
+                <strong class="text-dark">{{ $activeImport['bulan_nama'] }} {{ $activeImport['tahun'] }}</strong>
+                @if($activeImport['total_warning'] > 0)
+                    &mdash; <span class="text-warning fw-semibold">{{ $activeImport['total_warning'] }} baris</span> perlu dikoreksi
+                @endif
+                <span class="ms-2 badge" style="background:#dbeafe; color:#1d4ed8; font-size:0.72rem;">
+                    <i class="bi bi-hourglass-split me-1"></i>Berlaku s/d {{ $activeImport['expires_at'] }} WIB
+                </span>
+            </div>
+        </div>
+
+        {{-- Actions --}}
+        <div class="d-flex gap-2 flex-shrink-0">
+            <a href="{{ route('admin.import.resume') }}"
+               class="btn btn-primary btn-sm fw-semibold px-3"
+               style="white-space:nowrap;">
+                <i class="bi bi-arrow-right-circle me-1"></i>Lanjutkan Review
+            </a>
+            <form method="POST" action="{{ route('admin.import.execute') }}"
+                  onsubmit="return confirm('Yakin ingin membuang semua data preview yang belum disimpan?')">
+                @csrf
+                <input type="hidden" name="cache_key" value="{{ $activeImport['cache_key'] }}">
+                <input type="hidden" name="bulan" value="0">
+                <input type="hidden" name="tahun" value="0">
+                <input type="hidden" name="action" value="batal">
+                <button type="submit" class="btn btn-outline-secondary btn-sm"
+                        style="white-space:nowrap;">
+                    <i class="bi bi-trash me-1"></i>Buang
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
+
+<style>
+@keyframes pulse-dot {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50%       { transform: scale(1.4); opacity: 0.6; }
+}
+</style>
+
 {{-- Method Toggle Tabs --}}
+
 <ul class="nav nav-tabs mb-4" id="inputMethodTab" role="tablist">
     <li class="nav-item" role="presentation">
         <button class="nav-link {{ !request('jenis_potongan_id') ? 'active' : '' }}" id="import-tab" data-bs-toggle="tab" data-bs-target="#importTab" type="button" role="tab">
@@ -48,7 +116,7 @@
                     <div class="row g-3 mb-3">
                         <div class="col-6">
                             <label class="form-label fw-semibold">Bulan <span class="text-danger">*</span></label>
-                            <select name="bulan" class="form-select" required>
+                            <select name="bulan" id="importBulan" class="form-select" required>
                                 @foreach(['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'] as $i => $nama)
                                 <option value="{{ $i+1 }}" {{ now()->month == $i+1 ? 'selected' : '' }}>{{ $nama }}</option>
                                 @endforeach
@@ -56,11 +124,32 @@
                         </div>
                         <div class="col-6">
                             <label class="form-label fw-semibold">Tahun <span class="text-danger">*</span></label>
-                            <select name="tahun" class="form-select" required>
+                            <select name="tahun" id="importTahun" class="form-select" required>
                                 @for($y = now()->year; $y >= 2020; $y--)
                                 <option value="{{ $y }}">{{ $y }}</option>
                                 @endfor
                             </select>
+                        </div>
+                    </div>
+
+                    {{-- Period Warning Banner --}}
+                    <div id="periodWarningBanner" style="display:none;" class="mb-3">
+                        <div class="d-flex align-items-start gap-3 p-3 rounded-3"
+                             style="background:#fff8e1; border:1.5px solid #f59e0b; border-radius:10px;">
+                            <i class="bi bi-exclamation-triangle-fill text-warning mt-1" style="font-size:1.3rem; flex-shrink:0;"></i>
+                            <div>
+                                <div class="fw-bold text-warning-emphasis" style="font-size:0.9rem;">
+                                    Data periode ini sudah ada!
+                                </div>
+                                <div class="text-muted" style="font-size:0.82rem; margin-top:3px;" id="periodWarningText">
+                                    Terdapat &hellip; data pada periode yang dipilih.
+                                </div>
+                                <div style="font-size:0.8rem; margin-top:5px; color:#92400e;">
+                                    <i class="bi bi-arrow-repeat me-1"></i>
+                                    Data <strong>lama akan ditimpa (update)</strong> oleh data baru dari file Excel.
+                                    Pastikan Anda sudah yakin sebelum melanjutkan.
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -274,7 +363,17 @@
             ' <span class="text-muted">(' + (file.size / 1024 / 1024).toFixed(2) + ' MB)</span>';
     }
 
-    document.getElementById('importForm').addEventListener('submit', function() {
+    document.getElementById('importForm').addEventListener('submit', function(e) {
+        // Jika ada data periode → minta konfirmasi dulu
+        if (periodHasData) {
+            e.preventDefault();
+            new bootstrap.Modal(document.getElementById('confirmOverwriteModal')).show();
+            return;
+        }
+        submitForm();
+    });
+
+    function submitForm() {
         document.getElementById('submitBtn').disabled = true;
         document.getElementById('submitBtn').innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Memproses...';
         document.getElementById('progressSection').style.display = 'block';
@@ -286,6 +385,55 @@
             document.getElementById('progressBar').style.width = progress + '%';
             document.getElementById('progressText').textContent = Math.round(progress) + '%';
         }, 500);
+        document.getElementById('importForm').submit();
+    }
+
+    // ===== Cek periode & peringatan =====
+    const CHECK_PERIOD_URL = @json(route('admin.import.check-period'));
+    let periodHasData   = false;
+    let periodCheckTimer = null;
+
+    const BULAN_NAMES = ['','Januari','Februari','Maret','April','Mei','Juni',
+                         'Juli','Agustus','September','Oktober','November','Desember'];
+
+    function checkPeriod() {
+        const bulan = document.getElementById('importBulan').value;
+        const tahun = document.getElementById('importTahun').value;
+        if (!bulan || !tahun) return;
+
+        fetch(CHECK_PERIOD_URL + '?bulan=' + bulan + '&tahun=' + tahun, {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            periodHasData = data.exists;
+            const banner  = document.getElementById('periodWarningBanner');
+            const text    = document.getElementById('periodWarningText');
+            if (data.exists) {
+                text.innerHTML = 'Terdapat <strong>' + data.count + ' data</strong> pada periode '
+                    + '<strong>' + BULAN_NAMES[bulan] + ' ' + tahun + '</strong>. '
+                    + 'Data tersebut akan <strong>diperbarui</strong> oleh data dari file Excel.';
+                // Isi juga teks di modal konfirmasi
+                document.getElementById('modalPeriodInfo').textContent =
+                    BULAN_NAMES[bulan] + ' ' + tahun + ' (' + data.count + ' data)';
+                banner.style.display = 'block';
+            } else {
+                banner.style.display = 'none';
+            }
+        })
+        .catch(() => { periodHasData = false; });
+    }
+
+    document.getElementById('importBulan').addEventListener('change', checkPeriod);
+    document.getElementById('importTahun').addEventListener('change', checkPeriod);
+
+    // Cek otomatis saat pertama kali halaman dimuat
+    checkPeriod();
+
+    // Tombol "Lanjutkan" di modal konfirmasi
+    document.getElementById('btnLanjutkanImport').addEventListener('click', function() {
+        bootstrap.Modal.getInstance(document.getElementById('confirmOverwriteModal')).hide();
+        submitForm();
     });
 
     // ===== Input Kolektif: Set All =====
@@ -337,4 +485,58 @@
     });
 </script>
 @endpush
+{{-- ===== Modal Konfirmasi Timpa Data Periode ===== --}}
+<div class="modal fade" id="confirmOverwriteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 460px;">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-body p-0">
+                {{-- Header berwarna --}}
+                <div class="text-center py-4 px-4" style="background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); border-radius: 12px 12px 0 0;">
+                    <div style="width:64px; height:64px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; box-shadow:0 4px 16px rgba(245,158,11,0.25);">
+                        <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size:2rem;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-1" style="color:#92400e;">Data Periode Sudah Ada!</h5>
+                    <p class="mb-0 small text-muted">Periode yang Anda pilih:</p>
+                    <span class="badge mt-1 px-3 py-2" style="background:#f59e0b; color:#fff; font-size:0.9rem;" id="modalPeriodInfo">-</span>
+                </div>
+
+                {{-- Body --}}
+                <div class="px-4 py-4">
+                    <p class="mb-3 text-center" style="font-size:0.9rem; color:#374151;">
+                        Data yang sudah ada pada periode ini akan <strong>diperbarui (update)</strong>
+                        dengan data dari file Excel yang Anda upload.
+                    </p>
+
+                    <div class="rounded-3 p-3 mb-3" style="background:#fef2f2; border:1px solid #fecaca;">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="bi bi-info-circle-fill text-danger mt-1 flex-shrink-0"></i>
+                            <ul class="mb-0 ps-0" style="list-style:none; font-size:0.82rem; color:#7f1d1d;">
+                                <li><i class="bi bi-dot"></i> Data karyawan yg ada di Excel akan di-<em>update</em></li>
+                                <li><i class="bi bi-dot"></i> Data yg tidak ada di Excel <strong>tidak</strong> dihapus</li>
+                                <li><i class="bi bi-dot"></i> Aksi ini <strong>tidak dapat dibatalkan</strong> setelah disimpan</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <p class="text-center fw-semibold mb-0" style="font-size:0.88rem; color:#374151;">
+                        Apakah Anda yakin ingin melanjutkan?
+                    </p>
+                </div>
+
+                {{-- Footer --}}
+                <div class="d-flex gap-2 px-4 pb-4">
+                    <button type="button" class="btn btn-outline-secondary flex-fill" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i> Batal
+                    </button>
+                    <button type="button" class="btn btn-warning flex-fill fw-semibold" id="btnLanjutkanImport"
+                            style="color:#fff;">
+                        <i class="bi bi-cloud-upload me-1"></i> Ya, Lanjutkan Import
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
+

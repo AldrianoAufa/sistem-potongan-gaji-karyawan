@@ -28,10 +28,10 @@ class InputBulananController extends Controller
             });
         }
 
-        $inputBulanan = $query->orderBy('created_at', 'desc')->paginate(15);
-        $inputBulanan->appends($request->query());
+        $totalPotongan = (clone $query)->sum('jumlah_potongan');
+        $inputBulanan  = $query->orderBy('created_at', 'desc')->get();
 
-        $totalPotongan = $query->sum('jumlah_potongan');
+
 
         $karyawanList = karyawan::orderBy('nama')->get();
         $jenisPotonganList = JenisPotongan::orderBy('nama_potongan')->get();
