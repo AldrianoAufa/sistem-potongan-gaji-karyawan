@@ -40,71 +40,6 @@
     transform: scale(0.95);
 }
 
-
-/* ===== Loading Skeleton ===== */
-#loadingOverlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 1055;
-    background: rgba(255, 255, 255, 0.72);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 18px;
-}
-#loadingOverlay.active {
-    display: flex;
-}
-.loading-card {
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.13);
-    padding: 36px 48px;
-    text-align: center;
-    min-width: 260px;
-}
-.loading-dots {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 18px;
-}
-.loading-dots span {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: #4A90D9;
-    display: inline-block;
-    animation: dotBounce 1.2s infinite ease-in-out;
-}
-.loading-dots span:nth-child(1) { animation-delay: 0s;    background: #4A90D9; }
-.loading-dots span:nth-child(2) { animation-delay: 0.2s;  background: #6ab4ff; }
-.loading-dots span:nth-child(3) { animation-delay: 0.4s;  background: #a0cfff; }
-
-@keyframes dotBounce {
-    0%, 80%, 100% { transform: scale(0.7); opacity: 0.5; }
-    40%           { transform: scale(1.2); opacity: 1;   }
-}
-
-/* ===== Skeleton baris tabel ===== */
-.skeleton-table tbody tr td {
-    padding: 12px 16px;
-}
-.skel {
-    height: 14px;
-    border-radius: 6px;
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.4s infinite;
-}
-@keyframes shimmer {
-    0%   { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-}
-
 /* Fade in table rows */
 .data-table tbody tr {
     animation: fadeInRow 0.3s ease both;
@@ -130,17 +65,6 @@
 @endpush
 
 @section('content')
-
-{{-- Loading Overlay --}}
-<div id="loadingOverlay">
-    <div class="loading-card">
-        <div class="loading-dots">
-            <span></span><span></span><span></span>
-        </div>
-        <div class="fw-semibold text-dark mb-1" style="font-size: 1rem;">Memuat Data...</div>
-        <div class="text-muted" style="font-size: 0.82rem;">Mohon tunggu sebentar</div>
-    </div>
-</div>
 
 <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
     <h4><i class="bi bi-cash-coin me-2"></i>Data Potongan</h4>
@@ -176,12 +100,19 @@
                        value="{{ request('search') }}" style="width: 180px;">
             </div>
             <div class="col-auto">
+                <label class="form-label mb-0" style="font-size: 0.8rem;">Tampilkan</label>
+                <select name="per_page" class="form-select form-select-sm" style="width: 100px;" onchange="this.form.submit()">
+                    @foreach([25, 50, 100, 500, 1000] as $opt)
+                    <option value="{{ $opt }}" {{ $perPage == $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-auto">
                 <button class="btn btn-outline-primary btn-sm" type="submit">
                     <i class="bi bi-search me-1"></i>Filter
                 </button>
                 <a href="{{ route('admin.input-bulanan.index') }}"
-                   class="btn btn-outline-secondary btn-sm"
-                   onclick="showLoading()">Reset</a>
+                   class="btn btn-outline-secondary btn-sm">Reset</a>
             </div>
         </form>
     </div>
@@ -192,7 +123,8 @@
     <div class="card-header bg-white d-flex justify-content-between align-items-center py-2 border-bottom">
         <div class="info-bar">
             <i class="bi bi-table text-primary"></i>
-            Menampilkan <strong class="mx-1 text-dark">{{ $inputBulanan->count() }}</strong> data
+            Menampilkan <strong class="mx-1 text-dark">{{ $inputBulanan->firstItem() ?? 0 }}–{{ $inputBulanan->lastItem() ?? 0 }}</strong>
+            dari <strong class="mx-1 text-dark">{{ $inputBulanan->total() }}</strong> data
             @if(request('bulan') || request('tahun') || request('search'))
                 <span class="text-muted">(terfilter)</span>
             @endif
@@ -262,6 +194,18 @@
             </table>
         </div>
     </div>
+
+    {{-- Pagination --}}
+    @if($inputBulanan->hasPages())
+    <div class="card-footer bg-white border-top py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="text-muted" style="font-size: 0.82rem;">
+            Halaman {{ $inputBulanan->currentPage() }} dari {{ $inputBulanan->lastPage() }}
+        </div>
+        <div>
+            {{ $inputBulanan->links('pagination::bootstrap-5') }}
+        </div>
+    </div>
+    @endif
 </div>
 
 {{-- Tambah Modal --}}
@@ -366,25 +310,6 @@
 
 @push('scripts')
 <script>
-// Tampilkan loading overlay saat filter form di-submit
-function showLoading() {
-    document.getElementById('loadingOverlay').classList.add('active');
-}
-
-document.getElementById('filterForm').addEventListener('submit', function () {
-    showLoading();
-});
-
-// Jika ada redirect/flash setelah delete atau store, juga tampilkan loading saat halaman unload
-window.addEventListener('beforeunload', function (e) {
-    // Hanya jika bukan karena menutup tab (heuristic)
-    const activeEl = document.activeElement;
-    if (activeEl && (activeEl.tagName === 'A' || activeEl.form)) {
-        showLoading();
-    }
-});
-
-// Sembunyikan overlay secara otomatis saat halaman sudah selesai dimuat
 // ===== Back to Top =====
 const backToTopBtn = document.getElementById('backToTop');
 window.addEventListener('scroll', function () {
@@ -397,10 +322,6 @@ window.addEventListener('scroll', function () {
 
 backToTopBtn.addEventListener('click', function () {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-});
-
-window.addEventListener('load', function () {
-    document.getElementById('loadingOverlay').classList.remove('active');
 });
 </script>
 @endpush

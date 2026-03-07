@@ -29,15 +29,18 @@ class InputBulananController extends Controller
         }
 
         $totalPotongan = (clone $query)->sum('jumlah_potongan');
-        $inputBulanan  = $query->orderBy('created_at', 'desc')->get();
 
+        $perPage = in_array((int) $request->get('per_page'), [25, 50, 100, 500, 1000])
+            ? (int) $request->get('per_page')
+            : 25;
 
+        $inputBulanan  = $query->orderBy('created_at', 'desc')->paginate($perPage)->withQueryString();
 
         $karyawanList = karyawan::orderBy('nama')->get();
         $jenisPotonganList = JenisPotongan::orderBy('nama_potongan')->get();
 
         return view('admin.input-bulanan.index', compact(
-            'inputBulanan', 'totalPotongan', 'karyawanList', 'jenisPotonganList'
+            'inputBulanan', 'totalPotongan', 'karyawanList', 'jenisPotonganList', 'perPage'
         ));
     }
 

@@ -14,64 +14,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
     <style>
-        /* ===== SPINNER LOADER ===== */
-        #page-loader {
-            position: fixed;
-            inset: 0;
-            background: rgba(248, 250, 252, 0.88);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 14px;
-            transition: opacity 0.35s ease;
-        }
-        #page-loader.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-        .loader-ring {
-            position: relative;
-            width: 72px;
-            height: 72px;
-        }
-        .loader-ring svg {
-            position: absolute;
-            inset: 0;
-            transform: rotate(-90deg);
-        }
-        .loader-ring-track {
-            fill: none;
-            stroke: #e2e8f0;
-            stroke-width: 5;
-        }
-        .loader-ring-fill {
-            fill: none;
-            stroke: #137fec;
-            stroke-width: 5;
-            stroke-linecap: round;
-            stroke-dasharray: 188.5;
-            stroke-dashoffset: 188.5;
-            transition: stroke-dashoffset 0.15s linear;
-        }
-        .loader-pct {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #137fec;
-        }
-        .loader-label {
-            font-size: 0.78rem;
-            font-weight: 600;
-            color: #94a3b8;
-            letter-spacing: 0.5px;
-        }
-
         /* ===== DESIGN TOKENS ===== */
         :root {
             --primary: #137fec;
@@ -316,17 +258,6 @@
     @stack('styles')
 </head>
 <body>
-    {{-- Spinner Loader --}}
-    <div id="page-loader">
-        <div class="loader-ring">
-            <svg viewBox="0 0 64 64" width="72" height="72">
-                <circle class="loader-ring-track" cx="32" cy="32" r="30"/>
-                <circle class="loader-ring-fill" id="loader-fill" cx="32" cy="32" r="30"/>
-            </svg>
-            <div class="loader-pct"><span id="loader-pct-num">0</span>%</div>
-        </div>
-        <div class="loader-label">Memuat halaman...</div>
-    </div>
 
     {{-- Navbar --}}
     <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
@@ -378,76 +309,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // ===== SPINNER LOADER =====
-        (function() {
-            var loader  = document.getElementById('page-loader');
-            var fill    = document.getElementById('loader-fill');
-            var numEl   = document.getElementById('loader-pct-num');
-            var circ    = 188.5;   // 2 * pi * 30
-            var pct     = 0;
-            var timer   = null;
-            var done    = false;
-
-            function setPercent(p) {
-                pct = Math.min(p, 99);
-                if (numEl) numEl.textContent = Math.round(pct);
-                if (fill)  fill.style.strokeDashoffset = circ - (circ * pct / 100);
-            }
-
-            function tick() {
-                // Accelerate toward 90% gradually
-                var step = pct < 30  ? 3 :
-                           pct < 60  ? 2 :
-                           pct < 80  ? 1 :
-                           pct < 90  ? 0.4 : 0.1;
-                setPercent(pct + step);
-                if (pct < 90) timer = setTimeout(tick, 60);
-            }
-
-            function startLoader() {
-                if (loader) loader.classList.remove('hidden');
-                pct  = 0; done = false;
-                clearTimeout(timer);
-                setPercent(0);
-                tick();
-            }
-
-            function finishLoader() {
-                if (done) return;
-                done = true;
-                clearTimeout(timer);
-                setPercent(100);
-                setTimeout(function() {
-                    if (loader) loader.classList.add('hidden');
-                    setTimeout(function() {
-                        if (loader) loader.style.display = 'none';
-                    }, 380);
-                }, 200);
-            }
-
-            // Boot
-            startLoader();
-            window.addEventListener('load', finishLoader);
-
-            // Navigation trigger for links
-            document.addEventListener('click', function(e) {
-                var a = e.target.closest('a[href]');
-                if (a && !a.target && !a.dataset.bsToggle &&
-                    a.href && !a.href.startsWith('#') &&
-                    !a.href.startsWith('javascript') && !a.href.startsWith('mailto') &&
-                    a.origin === location.origin) {
-                    loader.style.display = '';
-                    startLoader();
-                }
-            });
-
-            // Navigation trigger for forms
-            document.addEventListener('submit', function(e) {
-                loader.style.display = '';
-                startLoader();
-            });
-        })();
-
         // ===== SIDEBAR TOGGLE =====
         document.getElementById('sidebarToggle')?.addEventListener('click', function() {
             document.querySelector('.sidebar')?.classList.toggle('show');
