@@ -51,6 +51,10 @@ class PotonganController extends Controller
             ->orderBy('bulan', 'desc')
             ->get();
 
+        if ($request->ajax()) {
+            return view('user.potongan._table', compact('potongan'))->render();
+        }
+
         return view('user.potongan.index', compact('potongan', 'jenisPotonganList', 'periodeList'));
     }
 

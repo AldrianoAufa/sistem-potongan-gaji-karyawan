@@ -15,7 +15,6 @@
             <table class="table table-custom table-hover mb-0">
                 <thead>
                     <tr>
-                        <th style="width: 50px;">No</th>
                         <th>Kode</th>
                         <th>Nama Potongan</th>
                         <th>Karyawan</th>
@@ -26,7 +25,6 @@
                 <tbody>
                     @forelse($jenisPotongan as $i => $item)
                     <tr>
-                        <td>{{ $jenisPotongan->firstItem() + $i }}</td>
                         <td><span class="badge bg-primary">{{ $item->kode_potongan }}</span></td>
                         <td class="fw-semibold">{{ $item->nama_potongan }}</td>
                         <td>
@@ -61,7 +59,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="text-center text-muted py-4">Belum ada data jenis potongan</td>
+                        <td colspan="5" class="text-center text-muted py-4">Belum ada data jenis potongan</td>
                     </tr>
                     @endforelse
                 </tbody>

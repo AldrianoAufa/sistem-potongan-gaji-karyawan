@@ -73,9 +73,11 @@ class ImportkaryawanController extends Controller
         $buatAkun = $request->boolean('buat_akun');
 
         try {
-            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getPathname());
+            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($file->getPathname());
+            $reader->setReadDataOnly(true);
+            $spreadsheet = $reader->load($file->getPathname());
             $worksheet = $spreadsheet->getActiveSheet();
-            $rows = $worksheet->toArray(null, true, true, true);
+            $rows = $worksheet->toArray(null, true, false, true);
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal membaca file Excel: ' . $e->getMessage());
         }
@@ -176,41 +178,73 @@ class ImportkaryawanController extends Controller
                 }
                 $departemenId = $departemenMap[$departemenKode];
 
-                // Check if karyawan already exists — update if so
-                if (in_array($kode, $existingKode)) {
-                    $karyawan = Karyawan::where('kode_karyawan', $kode)->first();
-                    $karyawan->update([
+                // Smart Merge Logic: Check if NIK is numeric and has a "base" version already in DB
+                $targetKaryawan = null;
+                $isNumeric = is_numeric($kode);
+                $baseKode = $isNumeric ? (string)floor((float)$kode) : $kode;
+
+                // Try exact match first
+                $targetKaryawan = Karyawan::where('kode_karyawan', $kode)->first();
+
+                // If no exact match and numeric, try matching by the "base" (integer part)
+                if (!$targetKaryawan && $isNumeric) {
+                    // Find any existing karyawan whose NIK has the same integer base
+                    // e.g., if we are importing 4994.24, check if 4994 exists.
+                    // Or if we are importing 4994, check if 4994.something exists.
+                    $targetKaryawan = Karyawan::where('kode_karyawan', $baseKode)
+                        ->orWhere('kode_karyawan', 'like', $baseKode . '.%')
+                        ->first();
+                    
+                    if ($targetKaryawan) {
+                        // If we found a base match, and the new NIK is "more specific" (has decimal), 
+                        // update the old one's NIK to the new one.
+                        // Logic: 4994.24 is better than 4994.
+                        $existingNik = $targetKaryawan->kode_karyawan;
+                        $hasDecimalNew = (strpos((string)$kode, '.') !== false);
+                        $hasDecimalOld = (strpos((string)$existingNik, '.') !== false);
+
+                        if ($hasDecimalNew && !$hasDecimalOld) {
+                            $targetKaryawan->kode_karyawan = $kode;
+                        }
+                    }
+                }
+
+                if ($targetKaryawan) {
+                    $targetKaryawan->update([
                         'nama' => $nama,
                         'jabatan_id' => $jabatanId,
                         'departemen_id' => $departemenId,
                     ]);
                     $diperbarui++;
+                    $karyawan = $targetKaryawan;
                 } else {
-                    // Create new karyawan
                     $karyawan = Karyawan::create([
                         'kode_karyawan' => $kode,
                         'nama' => $nama,
                         'jabatan_id' => $jabatanId,
                         'departemen_id' => $departemenId,
                     ]);
-                    $existingKode[] = $kode;
                     $berhasil++;
                 }
 
                 // Auto-create user account using NIK as username & password
                 if ($buatAkun) {
+                    $username = $karyawan->kode_karyawan; // Use the current (possibly updated) NIK
                     if ($karyawan->user) {
-                        // Already has account, skip
-                    } elseif (in_array($kode, $existingUsernames)) {
-                        $errors[] = ['baris' => $rowNum, 'nik' => $kode, 'error' => "Username '{$kode}' sudah digunakan (akun tidak dibuat, data karyawan tetap tersimpan)"];
+                        // Already has account, sync both username and password with current NIK
+                        $karyawan->user->update([
+                            'username' => $username,
+                            'password' => $username
+                        ]);
+                    } elseif (User::where('username', $username)->exists()) {
+                        $errors[] = ['baris' => $rowNum, 'nik' => $kode, 'error' => "Username '{$username}' sudah digunakan"];
                     } else {
                         User::create([
-                            'username' => $kode,
-                            'password' => $kode,
+                            'username' => $username,
+                            'password' => $username,
                             'role' => 'user',
                             'karyawan_id' => $karyawan->id,
                         ]);
-                        $existingUsernames[] = $kode;
                         $akunDibuat++;
                     }
                 }

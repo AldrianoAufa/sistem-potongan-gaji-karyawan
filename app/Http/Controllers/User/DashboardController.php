@@ -16,62 +16,85 @@ class DashboardController extends Controller
             return view('user.dashboard', [
                 'karyawan' => null,
                 'totalPotonganBulanIni' => 0,
-                'jenisPotonganAktif' => 0,
                 'potonganBulanIni' => collect(),
-                'grafikData' => [],
+                'availablePeriods' => collect(),
             ]);
         }
 
-        $bulanIni = now()->month;
-        $tahunIni = now()->year;
+        $bulan = now()->month;
+        $tahun = now()->year;
 
-        $potonganBulanIni = InputBulanan::with('jenisPotongan')
+        $potonganList = InputBulanan::with('jenisPotongan')
             ->where('karyawan_id', $karyawan->id)
-            ->where('bulan', $bulanIni)
-            ->where('tahun', $tahunIni)
+            ->where('bulan', $bulan)
+            ->where('tahun', $tahun)
             ->get();
 
-        $totalPotonganBulanIni = $potonganBulanIni->sum('jumlah_potongan');
+        $totalPotongan = $potonganList->sum('jumlah_potongan');
 
-        $jenisPotonganAktif = $potonganBulanIni->pluck('jenis_potongan_id')->unique()->count();
+        // Prepare slip data for preview
+        $totalPokok = $potonganList->sum(fn($p) => $p->data_rinci['PKOK'] ?? $p->jumlah_potongan);
+        $totalJasa  = $potonganList->sum(fn($p) => $p->data_rinci['RPBG'] ?? 0);
+        $terbilang = $this->terbilang((int) $totalPotongan) . ' Rupiah';
+        $namaBulan = $this->getMonthName($bulan);
 
-        // Grafik 6 bulan terakhir
-        $grafikData = [];
-        $bulanNames = [1=>'Jan',2=>'Feb',3=>'Mar',4=>'Apr',5=>'Mei',6=>'Jun',
-                      7=>'Jul',8=>'Ags',9=>'Sep',10=>'Okt',11=>'Nov',12=>'Des'];
-
-        for ($i = 5; $i >= 0; $i--) {
-            $date = now()->subMonths($i);
-            $bulan = $date->month;
-            $tahun = $date->year;
-
-            $total = InputBulanan::where('karyawan_id', $karyawan->id)
-                ->where('bulan', $bulan)
-                ->where('tahun', $tahun)
-                ->sum('jumlah_potongan');
-
-            $grafikData[] = [
-                'label' => $bulanNames[$bulan] . ' ' . $tahun,
-                'total' => (float) $total,
-            ];
-        }
-
-        // Pie chart data bulan ini - per jenis potongan
-        $pieChartData = [];
-        $pieColors = ['#1E3A5F','#4A90D9','#28A745','#FFC107','#DC3545','#17A2B8','#6F42C1','#FD7E14','#20C997','#E83E8C'];
-        $colorIndex = 0;
-        foreach ($potonganBulanIni as $item) {
-            $pieChartData[] = [
-                'label' => $item->jenisPotongan->nama_potongan,
-                'value' => (float) $item->jumlah_potongan,
-                'color' => $pieColors[$colorIndex % count($pieColors)],
-            ];
-            $colorIndex++;
-        }
+        // Available periods for selection
+        $availablePeriods = InputBulanan::where('karyawan_id', $karyawan->id)
+            ->selectRaw('bulan, tahun')
+            ->groupBy('bulan', 'tahun')
+            ->orderBy('tahun', 'desc')
+            ->orderBy('bulan', 'desc')
+            ->get()
+            ->map(function($p) {
+                return [
+                    'bulan' => $p->bulan,
+                    'tahun' => $p->tahun,
+                    'label' => $this->getMonthName($p->bulan) . ' ' . $p->tahun
+                ];
+            });
 
         return view('user.dashboard', compact(
-            'karyawan', 'totalPotonganBulanIni', 'jenisPotonganAktif',
-            'potonganBulanIni', 'grafikData', 'pieChartData'
+            'karyawan', 'totalPotongan',
+            'potonganList', 'availablePeriods',
+            'totalPokok', 'totalJasa', 'terbilang', 'namaBulan', 'bulan', 'tahun'
         ));
+    }
+
+    private function getMonthName($month)
+    {
+        return [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret',
+            4 => 'April',   5 => 'Mei',       6 => 'Juni',
+            7 => 'Juli',    8 => 'Agustus',   9 => 'September',
+            10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+        ][$month];
+    }
+
+    private function terbilang(int $angka): string
+    {
+        $satuan = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan',
+                   'Sepuluh', 'Sebelas', 'Dua Belas', 'Tiga Belas', 'Empat Belas', 'Lima Belas',
+                   'Enam Belas', 'Tujuh Belas', 'Delapan Belas', 'Sembilan Belas'];
+
+        if ($angka < 0) return 'Minus ' . $this->terbilang(abs($angka));
+        if ($angka === 0) return 'Nol';
+        if ($angka < 20) return $satuan[$angka];
+        if ($angka < 100) {
+            $puluh = intdiv($angka, 10);
+            $sisa  = $angka % 10;
+            return $satuan[$puluh] . ' Puluh' . ($sisa ? ' ' . $satuan[$sisa] : '');
+        }
+        if ($angka < 200) return 'Seratus' . ($angka % 100 ? ' ' . $this->terbilang($angka % 100) : '');
+        if ($angka < 1000) {
+            return $satuan[intdiv($angka, 100)] . ' Ratus' . ($angka % 100 ? ' ' . $this->terbilang($angka % 100) : '');
+        }
+        if ($angka < 2000) return 'Seribu' . ($angka % 1000 ? ' ' . $this->terbilang($angka % 1000) : '');
+        if ($angka < 1000000) {
+            return $this->terbilang(intdiv($angka, 1000)) . ' Ribu' . ($angka % 1000 ? ' ' . $this->terbilang($angka % 1000) : '');
+        }
+        if ($angka < 1000000000) {
+            return $this->terbilang(intdiv($angka, 1000000)) . ' Juta' . ($angka % 1000000 ? ' ' . $this->terbilang($angka % 1000000) : '');
+        }
+        return $this->terbilang(intdiv($angka, 1000000000)) . ' Milyar' . ($angka % 1000000000 ? ' ' . $this->terbilang($angka % 1000000000) : '');
     }
 }

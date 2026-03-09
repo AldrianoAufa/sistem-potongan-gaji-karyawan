@@ -32,6 +32,13 @@
             </div>
         </form>
         <div class="ms-auto d-flex gap-2">
+            <form action="{{ route('admin.karyawan.destroy-all') }}" method="POST" 
+                  onsubmit="return confirm('PERHATIAN! Tindakan ini akan menghapus SELURUH data karyawan, potongan bulanan, dan akun user. Lanjutkan?')">
+                @csrf @method('DELETE')
+                <button type="submit" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-trash-fill me-1"></i>Hapus Semua Data
+                </button>
+            </form>
             <a href="{{ route('admin.import-karyawan.form') }}" class="btn btn-outline-success btn-sm">
                 <i class="bi bi-file-earmark-excel me-1"></i>Import Excel
             </a>

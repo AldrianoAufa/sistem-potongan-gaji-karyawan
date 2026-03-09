@@ -59,18 +59,13 @@
 
             <hr>
 
-            <div id="akunFields" style="display: {{ old('buat_akun') ? 'block' : 'none' }};">
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Username</label>
-                    <input type="text" class="form-control @error('username') is-invalid @enderror"
-                           name="username" value="{{ old('username') }}" placeholder="Username untuk login">
-                    @error('username')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Password</label>
-                    <input type="password" class="form-control @error('password') is-invalid @enderror"
-                           name="password" placeholder="Minimal 6 karakter">
-                    @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            <div class="mb-4">
+                <div class="form-check form-switch card p-3 border-light shadow-sm bg-light bg-opacity-10">
+                    <div class="ms-4">
+                        <input class="form-check-input" type="checkbox" name="buat_akun" id="buatAkun" value="1" {{ old('buat_akun') ? 'checked' : '' }}>
+                        <label class="form-check-label fw-bold" for="buatAkun">Buat Akun Login Karyawan</label>
+                        <div class="form-text mt-1">Jika diaktifkan, <strong>Username</strong> dan <strong>Password</strong> akan otomatis diset sesuai dengan <strong>NIK</strong>.</div>
+                    </div>
                 </div>
             </div>
 
@@ -86,9 +81,7 @@
 
 @push('scripts')
 <script>
-    document.getElementById('buatAkun').addEventListener('change', function() {
-        document.getElementById('akunFields').style.display = this.checked ? 'block' : 'none';
-    });
+    // No more manual account fields to toggle
 </script>
 @endpush
 @endsection

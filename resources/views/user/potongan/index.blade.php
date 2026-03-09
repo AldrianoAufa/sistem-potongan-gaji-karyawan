@@ -45,10 +45,10 @@
 <!-- Filter -->
 <div class="card card-custom mb-3">
     <div class="card-body py-2">
-        <form method="GET" action="{{ route('user.potongan.index') }}" class="row g-2 align-items-end">
+        <form method="GET" action="{{ route('user.potongan.index') }}" class="row g-2 align-items-end" id="filterForm">
             <div class="col-auto">
                 <label class="form-label mb-0" style="font-size: 0.8rem;">Bulan</label>
-                <select name="bulan" class="form-select form-select-sm" style="width: 130px;">
+                <select name="bulan" class="form-select form-select-sm filter-input" style="width: 130px;">
                     <option value="">Semua</option>
                     @foreach(['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'] as $i => $nama)
                     <option value="{{ $i+1 }}" {{ request('bulan') == $i+1 ? 'selected' : '' }}>{{ $nama }}</option>
@@ -57,7 +57,7 @@
             </div>
             <div class="col-auto">
                 <label class="form-label mb-0" style="font-size: 0.8rem;">Tahun</label>
-                <select name="tahun" class="form-select form-select-sm" style="width: 100px;">
+                <select name="tahun" class="form-select form-select-sm filter-input" style="width: 100px;">
                     <option value="">Semua</option>
                     @for($y = now()->year; $y >= 2020; $y--)
                     <option value="{{ $y }}" {{ request('tahun') == $y ? 'selected' : '' }}>{{ $y }}</option>
@@ -66,7 +66,7 @@
             </div>
             <div class="col-auto">
                 <label class="form-label mb-0" style="font-size: 0.8rem;">Jenis</label>
-                <select name="jenis_potongan_id" class="form-select form-select-sm" style="width: 180px;">
+                <select name="jenis_potongan_id" class="form-select form-select-sm filter-input" style="width: 180px;">
                     <option value="">Semua</option>
                     @foreach($jenisPotonganList as $jp)
                     <option value="{{ $jp->id }}" {{ request('jenis_potongan_id') == $jp->id ? 'selected' : '' }}>
@@ -76,7 +76,8 @@
                 </select>
             </div>
             <div class="col-auto">
-                <button class="btn btn-primary btn-sm"><i class="bi bi-search me-1"></i>Filter</button>
+                {{-- No search button needed for auto-ajax, but keep for manual if JS fails --}}
+                <button type="submit" class="btn btn-primary btn-sm d-none"><i class="bi bi-search me-1"></i>Filter</button>
                 <a href="{{ route('user.potongan.index') }}" class="btn btn-outline-secondary btn-sm">Reset</a>
             </div>
         </form>
@@ -84,52 +85,75 @@
 </div>
 
 <div class="card card-custom">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-custom table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th>No</th>
-                        <th>Bulan/Tahun</th>
-                        <th>Jenis Potongan</th>
-                        <th class="text-end">Jumlah</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($potongan as $i => $item)
-                    <tr>
-                        <td>{{ $potongan->firstItem() + $i }}</td>
-                        <td>{{ $item->nama_bulan }} {{ $item->tahun }}</td>
-                        <td>
-                            <span class="badge bg-primary me-1">{{ $item->jenisPotongan->kode_potongan }}</span>
-                            {{ $item->jenisPotongan->nama_potongan }}
-                        </td>
-                        <td class="text-end fw-semibold">Rp {{ number_format($item->jumlah_potongan, 0, ',', '.') }}</td>
-                        <td>
-                            <div class="d-flex gap-1">
-                                @if($item->data_rinci)
-                                <a href="{{ route('user.potongan.show', $item) }}" class="btn btn-outline-info btn-sm" title="Detail">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                @endif
-                                <a href="{{ route('user.potongan.slip', [$item->bulan, $item->tahun]) }}"
-                                   class="btn btn-outline-primary btn-sm" title="Slip {{ $item->nama_bulan }} {{ $item->tahun }}">
-                                    <i class="bi bi-receipt"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr><td colspan="5" class="text-center text-muted py-4">Belum ada data potongan</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    <div class="card-body p-0" id="tableContainer">
+        @include('user.potongan._table')
     </div>
-    @if($potongan->hasPages())
-    <div class="card-footer bg-white">{{ $potongan->links() }}</div>
-    @endif
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterForm = document.getElementById('filterForm');
+    const tableContainer = document.getElementById('tableContainer');
+    const inputs = document.querySelectorAll('.filter-input');
+
+    const updateTable = () => {
+        const formData = new FormData(filterForm);
+        const params = new URLSearchParams(formData).toString();
+        const url = `${filterForm.action}?${params}`;
+
+        // Add loading state
+        tableContainer.style.opacity = '0.5';
+
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            tableContainer.innerHTML = html;
+            tableContainer.style.opacity = '1';
+            
+            // Update URL without reloading page
+            window.history.pushState({}, '', url);
+            
+            // Re-attach pagination listeners if needed (since they were replaced)
+            attachPaginationListeners();
+        });
+    };
+
+    const attachPaginationListeners = () => {
+        const paginationLinks = tableContainer.querySelectorAll('.pagination a');
+        paginationLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = this.href;
+                
+                tableContainer.style.opacity = '0.5';
+                fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    tableContainer.innerHTML = html;
+                    tableContainer.style.opacity = '1';
+                    window.history.pushState({}, '', url);
+                    attachPaginationListeners();
+                });
+            });
+        });
+    };
+
+    inputs.forEach(input => {
+        input.addEventListener('change', updateTable);
+    });
+
+    attachPaginationListeners();
+});
+</script>
+@endpush
 
 @endsection

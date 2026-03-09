@@ -204,11 +204,115 @@
 
 {{-- ===== Tabel Preview ===== --}}
 @if($totalValid > 0)
-<div class="card card-custom mb-4">
+{{-- ===== Tabel Peringatan (Koreksi) ===== --}}
+@php
+    $warningRows = array_filter($validData, fn($r) => $r['has_warning']);
+    $normalRows = array_filter($validData, fn($r) => !$r['has_warning']);
+@endphp
+
+@if(count($warningRows) > 0)
+<div class="card card-custom border-warning mb-4 shadow-sm">
+    <div class="card-header bg-warning bg-opacity-10 d-flex align-items-center justify-content-between py-3">
+        <div>
+            <span class="fw-bold text-warning"><i class="bi bi-exclamation-triangle-fill me-2"></i>Baris dengan Peringatan Hitungan (Butuh Koreksi)</span>
+            <span class="text-muted ms-2 small">(<span id="warningCounter">{{ count($warningRows) }}</span> baris)</span>
+        </div>
+    </div>
+
+    <div class="table-scroll-wrapper">
+        <table class="table table-hover table-bordered mb-0">
+            <thead class="sticky-header">
+                <tr class="table-warning">
+                    <th width="40" class="text-center">#</th>
+                    <th width="50" class="text-center">Baris</th>
+                    <th width="110">NIK</th>
+                    <th>Nama Karyawan</th>
+                    <th>Jenis Potongan</th>
+                    <th width="140" class="text-end">Nilai Pokok (PKOK)</th>
+                    <th width="120" class="text-end">RPBG</th>
+                    <th width="140" class="text-end">Angsuran (ANGS)</th>
+                    <th width="85" class="text-center">Status</th>
+                    <th width="100" class="text-center">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="import-preview-body" id="warningPreviewBody">
+                @foreach($validData as $i => $row)
+                @if($row['has_warning'])
+                <tr id="row-{{ $i }}"
+                    data-index="{{ $i }}"
+                    data-pkok="{{ $row['pkok'] }}"
+                    data-rpbg="{{ $row['rpbg'] }}"
+                    data-warning="{{ $row['has_warning'] ? '1' : '0' }}">
+                    <td class="text-center text-muted small row-num">{{ $i + 1 }}</td>
+                    <td class="text-center"><span class="badge bg-secondary">{{ $row['baris'] }}</span></td>
+                    <td><span class="badge bg-light text-dark border fw-semibold">{{ $row['kode_karyawan'] }}</span></td>
+                    <td class="fw-medium">{{ $row['nama_karyawan'] }}</td>
+                    <td>
+                        <span class="badge bg-light text-dark border me-1">{{ $row['kode_potongan'] }}</span>
+                        <small class="text-muted">{{ $row['nama_potongan'] }}</small>
+                    </td>
+
+                    <td class="text-end">
+                        <div class="d-flex align-items-center justify-content-end gap-1">
+                            <span class="text-muted small">Rp</span>
+                            <input type="number"
+                                class="pkok-input"
+                                id="pkok-{{ $i }}"
+                                value="{{ $row['pkok'] }}"
+                                min="0"
+                                step="1"
+                                data-original="{{ $row['pkok'] }}"
+                                onchange="onPkokChange({{ $i }})"
+                                oninput="onPkokInput({{ $i }})"
+                                title="Edit nilai pokok">
+                        </div>
+                    </td>
+
+                    <td class="text-end rpbg-display" id="rpbg-{{ $i }}">
+                        Rp {{ number_format($row['rpbg'], 0, ',', '.') }}
+                    </td>
+
+                    <td class="text-end angs-display" id="angs-{{ $i }}">
+                        Rp {{ number_format($row['jumlah_potongan'], 0, ',', '.') }}
+                    </td>
+
+                    <td class="text-center" id="status-{{ $i }}">
+                        <span class="badge-warning-row"><i class="bi bi-exclamation-triangle me-1"></i>Koreksi</span>
+                    </td>
+
+                    <td class="text-center">
+                        <div class="d-flex gap-1 justify-content-center">
+                            <button type="button"
+                                class="btn btn-sm btn-outline-primary btn-edit-row"
+                                id="savePkok-{{ $i }}"
+                                onclick="savePkok({{ $i }})"
+                                title="Simpan perubahan nilai pokok"
+                                style="display:none;">
+                                <i class="bi bi-check-lg"></i>
+                            </button>
+                            <button type="button"
+                                class="btn btn-sm btn-outline-danger btn-delete-row"
+                                onclick="confirmDeleteRow({{ $i }})"
+                                title="Hapus baris ini">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                @endif
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
+
+{{-- ===== Tabel Data Normal / Utama ===== --}}
+<div class="card card-custom mb-4 shadow-sm">
     <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
         <div>
             <span class="fw-bold"><i class="bi bi-list-check me-2 text-primary"></i>Daftar Data yang Akan Diimpor</span>
-            <span class="text-muted ms-2 small">(<span id="headerCounter">{{ $totalValid }}</span> baris)</span>
+            <span class="text-muted ms-2 small">(<span id="normalCounter">{{ count($normalRows) }}</span> baris)</span>
         </div>
         {{-- Search --}}
         <div class="input-group input-group-sm" style="width: 240px;">
@@ -233,8 +337,9 @@
                     <th width="100" class="text-center">Aksi</th>
                 </tr>
             </thead>
-            <tbody id="previewBody">
+            <tbody class="import-preview-body" id="normalPreviewBody">
                 @foreach($validData as $i => $row)
+                @if(!$row['has_warning'])
                 <tr id="row-{{ $i }}"
                     data-index="{{ $i }}"
                     data-pkok="{{ $row['pkok'] }}"
@@ -249,7 +354,6 @@
                         <small class="text-muted">{{ $row['nama_potongan'] }}</small>
                     </td>
 
-                    {{-- PKOK editable --}}
                     <td class="text-end">
                         <div class="d-flex align-items-center justify-content-end gap-1">
                             <span class="text-muted small">Rp</span>
@@ -266,26 +370,18 @@
                         </div>
                     </td>
 
-                    {{-- RPBG (tetap) --}}
                     <td class="text-end rpbg-display" id="rpbg-{{ $i }}">
                         Rp {{ number_format($row['rpbg'], 0, ',', '.') }}
                     </td>
 
-                    {{-- ANGS (otomatis) --}}
                     <td class="text-end angs-display" id="angs-{{ $i }}">
                         Rp {{ number_format($row['jumlah_potongan'], 0, ',', '.') }}
                     </td>
 
-                    {{-- Status --}}
                     <td class="text-center" id="status-{{ $i }}">
-                        @if($row['has_warning'])
-                            <span class="badge-warning-row"><i class="bi bi-exclamation-triangle me-1"></i>Koreksi</span>
-                        @else
-                            <span class="badge-ok-row"><i class="bi bi-check2 me-1"></i>OK</span>
-                        @endif
+                        <span class="badge-ok-row"><i class="bi bi-check2 me-1"></i>OK</span>
                     </td>
 
-                    {{-- Aksi --}}
                     <td class="text-center">
                         <div class="d-flex gap-1 justify-content-center">
                             <button type="button"
@@ -305,6 +401,7 @@
                         </div>
                     </td>
                 </tr>
+                @endif
                 @endforeach
             </tbody>
         </table>
@@ -541,24 +638,33 @@ function executeDelete() {
 // REINDEX & COUNTERS
 // ============================================================
 function reindexRows() {
-    const rows = document.querySelectorAll('#previewBody tr:not([style*="display: none"])');
-    let num = 1;
-    rows.forEach(tr => {
-        const numCell = tr.querySelector('.row-num');
-        if (numCell) numCell.textContent = num++;
+    // Re-index both tables
+    document.querySelectorAll('.import-preview-body').forEach(tbody => {
+        const rows = tbody.querySelectorAll('tr:not([style*="display: none"])');
+        let num = 1;
+        rows.forEach(tr => {
+            const numCell = tr.querySelector('.row-num');
+            if (numCell) numCell.textContent = num++;
+        });
     });
 }
 
 function updateCounters() {
-    const visibleRows = document.querySelectorAll('#previewBody tr').length;
-    document.getElementById('statTotal').textContent   = visibleRows;
-    document.getElementById('headerCounter').textContent = visibleRows;
-    document.getElementById('saveCount').textContent   = visibleRows;
-    document.getElementById('btnCount').textContent    = visibleRows;
+    const totalVisible = document.querySelectorAll('.import-preview-body tr').length;
+    const warningVisible = document.querySelectorAll('#warningPreviewBody tr').length;
+    const normalVisible = document.querySelectorAll('#normalPreviewBody tr').length;
 
-    // Recount warnings
+    document.getElementById('statTotal').textContent   = totalVisible;
+    if (document.getElementById('warningCounter')) {
+        document.getElementById('warningCounter').textContent = warningVisible;
+    }
+    document.getElementById('normalCounter').textContent = normalVisible;
+    document.getElementById('saveCount').textContent   = totalVisible;
+    document.getElementById('btnCount').textContent    = totalVisible;
+
+    // Recount warnings for the stat top card
     let warnCount = 0;
-    document.querySelectorAll('#previewBody tr').forEach(tr => {
+    document.querySelectorAll('.import-preview-body tr').forEach(tr => {
         if (tr.querySelector('.badge-warning-row')) warnCount++;
     });
     document.getElementById('statWarning').textContent = warnCount;
@@ -568,7 +674,7 @@ function updateCounters() {
 // SAVE FORM
 // ============================================================
 function onSave() {
-    const count = document.querySelectorAll('#previewBody tr').length;
+    const count = document.querySelectorAll('.import-preview-body tr').length;
     if (count === 0) {
         alert('Tidak ada data untuk disimpan.');
         return false;
@@ -591,7 +697,7 @@ function onSave() {
 // ============================================================
 document.getElementById('searchInput')?.addEventListener('input', function () {
     const keyword = this.value.toLowerCase();
-    document.querySelectorAll('#previewBody tr').forEach(tr => {
+    document.querySelectorAll('.import-preview-body tr').forEach(tr => {
         const text = tr.textContent.toLowerCase();
         tr.style.display = text.includes(keyword) ? '' : 'none';
     });

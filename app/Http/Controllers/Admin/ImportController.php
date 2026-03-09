@@ -44,7 +44,7 @@ class ImportController extends Controller
         $activeImport = null;
         $activeCacheKey = session('import_active_cache_key');
         if ($activeCacheKey) {
-            $cachedData = Cache::get($activeCacheKey);
+            $cachedData = Cache::store('file')->get($activeCacheKey);
             if ($cachedData) {
                 $bulanNames = [
                     1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',
@@ -97,6 +97,7 @@ class ImportController extends Controller
 
     public function process(Request $request)
     {
+        ini_set('memory_limit', '1024M');
         $request->validate([
             'file' => 'required|file|mimes:xlsx,xls|max:10240',
             'bulan' => 'required|integer|between:1,12',
@@ -108,9 +109,11 @@ class ImportController extends Controller
         $tahun = (int) $request->tahun;
 
         try {
-            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getPathname());
+            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($file->getPathname());
+            $reader->setReadDataOnly(true);
+            $spreadsheet = $reader->load($file->getPathname());
             $worksheet = $spreadsheet->getActiveSheet();
-            $rows = $worksheet->toArray(null, true, true, true);
+            $rows = $worksheet->toArray(null, true, false, true);
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal membaca file Excel: ' . $e->getMessage());
         }
@@ -134,15 +137,25 @@ class ImportController extends Controller
         // Map header positions
         $headerMap = array_flip($headers);
 
-        // Cache karyawan and jenis potongan
+        // Cache karyawan
         $karyawans = karyawan::select('id', 'kode_karyawan', 'nama')->get();
         $karyawanMap = [];
         foreach($karyawans as $k) {
             $karyawanMap[$k->kode_karyawan] = ['id' => $k->id, 'nama' => $k->nama];
         }
 
-        $jenisPotonganMap    = JenisPotongan::pluck('id', 'kode_potongan')->toArray();
-        $jenisPotonganNamaMap = JenisPotongan::pluck('nama_potongan', 'id')->toArray();
+        // Cache jenis potongan dengan normalisasi untuk menangani padding (02 vs 2)
+        $rawJenisPotongan = JenisPotongan::all();
+        $jenisPotonganMap = [];
+        $jenisPotonganNamaMap = [];
+        foreach ($rawJenisPotongan as $jp) {
+            $code = (string) $jp->kode_potongan;
+            $jenisPotonganMap[$code] = $jp->id;
+            if (is_numeric($code)) {
+                $jenisPotonganMap[(string)(float)$code] = $jp->id;
+            }
+            $jenisPotonganNamaMap[$jp->id] = $jp->nama_potongan;
+        }
 
         $gagal     = 0;
         $errors    = [];
@@ -174,18 +187,25 @@ class ImportController extends Controller
                 continue;
             }
 
-            // Validasi GRUP
+            // Validasi GRUP (Normalisasi agar 02 cocok dengan 2)
             if (empty($grup)) {
                 $errors[] = ['baris' => $rowNum, 'kode' => $cust, 'error' => 'Kode jenis potongan (GRUP) kosong'];
                 $gagal++;
                 continue;
             }
 
-            if (!isset($jenisPotonganMap[$grup])) {
+            $lookupGrup = $grup;
+            if (is_numeric($grup)) {
+                $lookupGrup = (string)(float)$grup;
+            }
+
+            if (!isset($jenisPotonganMap[$lookupGrup]) && !isset($jenisPotonganMap[$grup])) {
                 $errors[] = ['baris' => $rowNum, 'kode' => $cust, 'error' => "Jenis potongan '{$grup}' tidak ditemukan"];
                 $gagal++;
                 continue;
             }
+
+            $jenisPotonganId = $jenisPotonganMap[$lookupGrup] ?? $jenisPotonganMap[$grup];
 
             // Validasi angka
             if (!is_numeric($angs)) {
@@ -211,12 +231,20 @@ class ImportController extends Controller
             $saldFloat = is_numeric($sald) ? (float) $sald : 0;
 
             $dataRinci = [
+                'URUT' => $rowValues[$headerMap['URUT']] ?? null,
+                'KDPR' => trim($rowValues[$headerMap['KDPR']] ?? ''),
+                'NMPR' => $nmpr,
+                'CUST' => $cust,
+                'NAMA' => trim($rowValues[$headerMap['NAMA']] ?? ''),
+                'GRUP' => $grup,
+                'NMGR' => trim($rowValues[$headerMap['NMGR']] ?? ''),
                 'PINJ' => is_numeric($pinj) ? (float) $pinj : 0,
                 'AWAL' => $awalFloat,
                 'BULN' => is_numeric($buln) ? (int) $buln : 0,
                 'KALI' => is_numeric($kali) ? (int) $kali : 0,
                 'PKOK' => $pkokFloat,
                 'RPBG' => $rpbgFloat,
+                'ANGS' => $angsFloat,
                 'SALD' => $saldFloat,
             ];
 
@@ -226,7 +254,7 @@ class ImportController extends Controller
             // Cek apakah ada warning perhitungan
             $hasWarning = (abs($angsFloat - $hitungAngs) > 1 && $pkokFloat > 0);
 
-            $jenisPotonganId = $jenisPotonganMap[$grup];
+            // $jenisPotonganId sudah didapat di atas
 
             $validData[] = [
                 'baris'             => $rowNum,
@@ -254,7 +282,7 @@ class ImportController extends Controller
         // Cache valid data untuk proses execute nanti (expired in 60 mins)
         $cacheKey = 'import_data_' . auth()->id() . '_' . time();
         $expiresAt = now()->addMinutes(60);
-        Cache::put($cacheKey, [
+        Cache::store('file')->put($cacheKey, [
             'rows'   => $validData,
             'bulan'  => $bulan,
             'tahun'  => $tahun,
@@ -284,7 +312,7 @@ class ImportController extends Controller
                 ->with('error', 'Parameter preview tidak valid.');
         }
 
-        $cached = Cache::get($cacheKey);
+        $cached = Cache::store('file')->get($cacheKey);
         if (!$cached) {
             session()->forget(['import_active_cache_key', 'import_active_expires_at']);
             return redirect()->route('admin.import.form')
@@ -316,7 +344,7 @@ class ImportController extends Controller
                 ->with('error', 'Tidak ada sesi import yang aktif.');
         }
 
-        $cached = Cache::get($cacheKey);
+        $cached = Cache::store('file')->get($cacheKey);
         if (!$cached) {
             session()->forget(['import_active_cache_key', 'import_active_expires_at']);
             return redirect()->route('admin.import.form')
@@ -338,7 +366,7 @@ class ImportController extends Controller
             'pkok'      => 'required|numeric|min:0',
         ]);
 
-        $cached = Cache::get($request->cache_key);
+        $cached = Cache::store('file')->get($request->cache_key);
         if (!$cached) {
             return response()->json(['success' => false, 'message' => 'Sesi import kedaluwarsa.'], 422);
         }
@@ -359,7 +387,7 @@ class ImportController extends Controller
         $excelAngs    = $cached['rows'][$index]['excel_angs'];
         $cached['rows'][$index]['has_warning'] = (abs($excelAngs - $angsBaru) > 1 && $pkokBaru > 0);
 
-        Cache::put($request->cache_key, $cached, now()->addMinutes(60));
+        Cache::store('file')->put($request->cache_key, $cached, now()->addMinutes(60));
 
         return response()->json([
             'success'          => true,
@@ -380,7 +408,7 @@ class ImportController extends Controller
             'index'     => 'required|integer|min:0',
         ]);
 
-        $cached = Cache::get($request->cache_key);
+        $cached = Cache::store('file')->get($request->cache_key);
         if (!$cached) {
             return response()->json(['success' => false, 'message' => 'Sesi import kedaluwarsa.'], 422);
         }
@@ -392,7 +420,7 @@ class ImportController extends Controller
 
         // Hapus baris dan re-index
         array_splice($cached['rows'], $index, 1);
-        Cache::put($request->cache_key, $cached, now()->addMinutes(60));
+        Cache::store('file')->put($request->cache_key, $cached, now()->addMinutes(60));
 
         return response()->json([
             'success'    => true,
@@ -402,6 +430,8 @@ class ImportController extends Controller
 
     public function execute(Request $request)
     {
+        ini_set('memory_limit', '1024M');
+        set_time_limit(600);
         $request->validate([
             'cache_key' => 'required',
             'bulan'     => 'required|integer',
@@ -409,12 +439,12 @@ class ImportController extends Controller
         ]);
 
         if ($request->action === 'batal') {
-            Cache::forget($request->cache_key);
+            Cache::store('file')->forget($request->cache_key);
             session()->forget(['import_active_cache_key', 'import_active_expires_at']);
             return redirect()->route('admin.import.form')->with('info', 'Import dibatalkan oleh pengguna.');
         }
 
-        $cached = Cache::get($request->cache_key);
+        $cached = Cache::store('file')->get($request->cache_key);
         if (!$cached) {
             return redirect()->route('admin.import.form')->with('error', 'Sesi import telah kedaluwarsa. Silakan upload file Excel kembali.');
         }
@@ -459,7 +489,7 @@ class ImportController extends Controller
             }
 
             DB::commit();
-            Cache::forget($request->cache_key);
+            Cache::store('file')->forget($request->cache_key);
             session()->forget(['import_active_cache_key', 'import_active_expires_at']);
         } catch (\Exception $e) {
             DB::rollBack();

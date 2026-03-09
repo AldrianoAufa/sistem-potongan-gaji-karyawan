@@ -40,9 +40,9 @@
     transform: scale(0.95);
 }
 
-/* Fade in table rows */
+/* Menghapus animasi untuk performa data besar */
 .data-table tbody tr {
-    animation: fadeInRow 0.3s ease both;
+    /* animation: fadeInRow 0.3s ease both; */
 }
 @keyframes fadeInRow {
     from { opacity: 0; transform: translateY(6px); }
@@ -103,8 +103,9 @@
                 <label class="form-label mb-0" style="font-size: 0.8rem;">Tampilkan</label>
                 <select name="per_page" class="form-select form-select-sm" style="width: 100px;" onchange="this.form.submit()">
                     @foreach([25, 50, 100, 500, 1000] as $opt)
-                    <option value="{{ $opt }}" {{ $perPage == $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                    <option value="{{ $opt }}" {{ request('per_page') == $opt ? 'selected' : '' }}>{{ $opt }}</option>
                     @endforeach
+                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>Semua</option>
                 </select>
             </div>
             <div class="col-auto">
@@ -113,6 +114,10 @@
                 </button>
                 <a href="{{ route('admin.input-bulanan.index') }}"
                    class="btn btn-outline-secondary btn-sm">Reset</a>
+                <a href="{{ route('admin.input-bulanan.index', ['bulan' => '', 'tahun' => '', 'per_page' => request('per_page')]) }}"
+                   class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-x-circle me-1"></i>Bersihkan Filter
+                </a>
             </div>
         </form>
     </div>
@@ -139,43 +144,61 @@
             <table class="table table-custom table-hover mb-0 data-table">
                 <thead>
                     <tr>
-                        <th width="50">No</th>
-                        <th>Kode</th>
-                        <th>Nama Karyawan</th>
-                        <th>Jenis Potongan</th>
-                        <th>Bulan/Tahun</th>
-                        <th class="text-end">Jumlah</th>
+                        <th width="30">No</th>
+                        <th width="70">KDPR</th>
+                        <th width="120">NMPR</th>
+                        <th width="90">CUST</th>
+                        <th width="150">NAMA</th>
+                        <th width="60">GRUP</th>
+                        <th width="140">NMGR</th>
+                        <th class="text-end" width="100">PINJ</th>
+                        <th class="text-end" width="100">AWAL</th>
+                        <th width="50" class="text-center">BULN</th>
+                        <th width="50" class="text-center">KALI</th>
+                        <th class="text-end" width="100">PKOK</th>
+                        <th class="text-end" width="100">RPBG</th>
+                        <th class="text-end" width="100">ANGS</th>
+                        <th class="text-end" width="100">SALD</th>
                         <th width="90">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($inputBulanan as $i => $item)
-                    <tr style="animation-delay: {{ min($i * 0.03, 0.6) }}s">
-                        <td class="text-muted small">{{ $i + 1 }}</td>
-                        <td><span class="badge bg-light text-dark border">{{ $item->karyawan->kode_karyawan }}</span></td>
-                        <td class="fw-medium">{{ $item->karyawan->nama }}</td>
+                    @php $rinci = $item->data_rinci ?? []; @endphp
+                    <tr style="animation-delay: {{ min($i * 0.03, 0.6) }}s; font-size: 0.85rem;">
+                        <td class="text-muted small">{{ $rinci['URUT'] ?? ($inputBulanan->firstItem() + $i) }}</td>
+                        <td>{{ $rinci['KDPR'] ?? '-' }}</td>
+                        <td class="small">{{ $rinci['NMPR'] ?? '-' }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ $rinci['CUST'] ?? ($item->karyawan->kode_karyawan ?? '-') }}</span></td>
+                        <td class="fw-medium">{{ $rinci['NAMA'] ?? ($item->karyawan->nama ?? '-') }}</td>
+                        <td><span class="badge bg-primary">{{ $rinci['GRUP'] ?? ($item->jenisPotongan->kode_potongan ?? '-') }}</span></td>
+                        <td class="small">{{ $rinci['NMGR'] ?? ($item->jenisPotongan->nama_potongan ?? '-') }}</td>
+                        <td class="text-end">{{ number_format($rinci['PINJ'] ?? 0, 0, ',', '.') }}</td>
+                        <td class="text-end">{{ number_format($rinci['AWAL'] ?? 0, 0, ',', '.') }}</td>
+                        <td class="text-center">{{ $rinci['BULN'] ?? '-' }}</td>
+                        <td class="text-center">{{ $rinci['KALI'] ?? '-' }}</td>
+                        <td class="text-end">{{ number_format($rinci['PKOK'] ?? 0, 0, ',', '.') }}</td>
+                        <td class="text-end">{{ number_format($rinci['RPBG'] ?? 0, 0, ',', '.') }}</td>
+                        <td class="text-end fw-bold text-primary">{{ number_format($item->jumlah_potongan, 0, ',', '.') }}</td>
+                        <td class="text-end">{{ number_format($rinci['SALD'] ?? 0, 0, ',', '.') }}</td>
                         <td>
-                            <span class="badge bg-primary">{{ $item->jenisPotongan->kode_potongan }}</span>
-                            <span class="text-muted small ms-1">{{ $item->jenisPotongan->nama_potongan }}</span>
-                        </td>
-                        <td>{{ $item->nama_bulan }} {{ $item->tahun }}</td>
-                        <td class="text-end fw-semibold">Rp {{ number_format($item->jumlah_potongan, 0, ',', '.') }}</td>
-                        <td>
-                            <a href="{{ route('admin.input-bulanan.edit', $item) }}"
-                               class="btn btn-warning btn-sm">
-                                <i class="bi bi-pencil-square"></i>
-                            </a>
-                            <form action="{{ route('admin.input-bulanan.destroy', $item) }}"
-                                  method="POST" class="d-inline"
-                                  onsubmit="return confirm('Yakin hapus data ini?')">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button>
-                            </form>
+                            <div class="d-flex gap-1">
+                                <a href="{{ route('admin.input-bulanan.edit', $item) }}"
+                                   class="btn btn-warning btn-sm p-1" style="line-height: 1;">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <form action="{{ route('admin.input-bulanan.destroy', $item) }}"
+                                      method="POST" class="d-inline"
+                                      onsubmit="return confirm('Yakin hapus data ini?')">
+                                    @csrf @method('DELETE')
+                                    <button class="btn btn-danger btn-sm p-1" style="line-height: 1;"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-5">
+                        <td colspan="16" class="text-center text-muted py-5">
                             <i class="bi bi-inbox fs-2 d-block mb-2 opacity-50"></i>
                             Tidak ada data potongan
                         </td>
@@ -185,9 +208,9 @@
                 @if($inputBulanan->count() > 0)
                 <tfoot>
                     <tr class="fw-bold table-light">
-                        <td colspan="5" class="text-end">Total Potongan:</td>
+                        <td colspan="13" class="text-end small">Total Angsuran (ANGS):</td>
                         <td class="text-end text-primary">Rp {{ number_format($totalPotongan, 0, ',', '.') }}</td>
-                        <td></td>
+                        <td colspan="2"></td>
                     </tr>
                 </tfoot>
                 @endif

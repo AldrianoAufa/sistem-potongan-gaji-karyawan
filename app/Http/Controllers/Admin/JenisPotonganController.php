@@ -12,7 +12,8 @@ class JenisPotonganController extends Controller
     {
         // Ambil semua jenis potongan beserta count karyawan dan input bulanan
         $jenisPotongan = JenisPotongan::withCount('inputBulanan')
-            ->orderBy('kode_potongan')
+            ->orderByRaw('CHAR_LENGTH(kode_potongan) ASC')
+            ->orderBy('kode_potongan', 'ASC')
             ->paginate(15);
 
         // Load relasi karyawan secara terpisah agar tidak konflik dengan withCount

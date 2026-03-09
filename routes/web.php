@@ -36,6 +36,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
 
     Route::resource('karyawan', karyawanController::class)->except(['show']);
+    Route::delete('karyawan-all', [karyawanController::class, 'destroyAll'])->name('karyawan.destroy-all');
     Route::get('karyawan-mapping', [karyawanController::class, 'mapping'])->name('karyawan.mapping');
     Route::post('karyawan-mapping/{karyawan}', [karyawanController::class, 'updateMapping'])->name('karyawan.mapping.update');
     Route::post('karyawan/{karyawan}/reset-password', [KaryawanController::class, 'resetPassword'])->name('karyawan.reset-password');

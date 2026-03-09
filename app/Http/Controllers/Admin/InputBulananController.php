@@ -12,6 +12,8 @@ class InputBulananController extends Controller
 {
     public function index(Request $request)
     {
+        ini_set('memory_limit', '1024M');
+        set_time_limit(300);
         $query = InputBulanan::with(['karyawan', 'jenisPotongan']);
 
         if ($request->filled('bulan')) {
@@ -30,11 +32,14 @@ class InputBulananController extends Controller
 
         $totalPotongan = (clone $query)->sum('jumlah_potongan');
 
-        $perPage = in_array((int) $request->get('per_page'), [25, 50, 100, 500, 1000])
-            ? (int) $request->get('per_page')
-            : 25;
-
-        $inputBulanan  = $query->orderBy('created_at', 'desc')->paginate($perPage)->withQueryString();
+        $perPage = $request->get('per_page');
+        if ($perPage === 'all') {
+            $perPage = 5000;
+        } else {
+            $perPage = in_array((int) $perPage, [25, 50, 100, 500, 1000]) ? (int) $perPage : 25;
+        }
+        
+        $inputBulanan  = $query->orderBy('id', 'asc')->paginate($perPage)->withQueryString();
 
         $karyawanList = karyawan::orderBy('nama')->get();
         $jenisPotonganList = JenisPotongan::orderBy('nama_potongan')->get();

@@ -57,8 +57,6 @@ class KaryawanController extends Controller
             'jabatan_id' => 'required|exists:jabatan,id',
             'departemen_id' => 'required|exists:departemen,id',
             'buat_akun' => 'nullable|boolean',
-            'username' => 'nullable|required_if:buat_akun,1|string|max:50|unique:users,username',
-            'password' => 'nullable|required_if:buat_akun,1|string|min:6',
         ]);
 
         $karyawan = Karyawan::create([
@@ -68,14 +66,23 @@ class KaryawanController extends Controller
             'departemen_id' => $validated['departemen_id'],
         ]);
 
-        // Optionally create user account
-        if ($request->boolean('buat_akun') && $request->filled('username')) {
-            User::create([
-                'username' => $validated['username'],
-                'password' => $validated['password'],
-                'role' => 'user',
-                'karyawan_id' => $karyawan->id,
-            ]);
+        // Create user account using NIK as username and password
+        if ($request->boolean('buat_akun')) {
+            $nik = $validated['kode_karyawan'];
+            
+            // Check if username already exists for someone else
+            if (User::where('username', $nik)->where('karyawan_id', '!=', $karyawan->id)->exists()) {
+                session()->flash('error', "Gagal membuat akun: Username '{$nik}' sudah digunakan oleh orang lain.");
+            } else {
+                User::updateOrCreate(
+                    ['karyawan_id' => $karyawan->id],
+                    [
+                        'username' => $nik,
+                        'password' => $nik,
+                        'role' => 'user'
+                    ]
+                );
+            }
         }
 
         return redirect()->route('admin.karyawan.index')
@@ -100,8 +107,17 @@ class KaryawanController extends Controller
 
         $karyawan->update($validated);
 
+        // Sync user account if exists
+        if ($karyawan->user) {
+            $nik = $validated['kode_karyawan'];
+            $karyawan->user->update([
+                'username' => $nik,
+                'password' => $nik,
+            ]);
+        }
+
         return redirect()->route('admin.karyawan.index')
-            ->with('success', 'karyawan berhasil diperbarui.');
+            ->with('success', 'karyawan berhasil diperbarui serta akun user disinkronkan.');
     }
 
     public function destroy(Karyawan $karyawan)
@@ -120,6 +136,28 @@ class KaryawanController extends Controller
 
         return redirect()->route('admin.karyawan.index')
             ->with('success', 'karyawan berhasil dihapus.');
+    }
+
+    public function destroyAll()
+    {
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            // Delete regular users first (those associated with karyawan)
+            User::where('role', 'user')->delete();
+            
+            // Delete all mappings in pivot table
+            \Illuminate\Support\Facades\DB::table('karyawan_potongan')->delete();
+            
+            // Delete all karyawan (this will cascade delete input_bulanan)
+            Karyawan::query()->delete();
+            
+            \Illuminate\Support\Facades\DB::commit();
+            return redirect()->route('admin.karyawan.index')
+                ->with('success', 'Semua data karyawan, akun user (non-admin), dan data potongan telah dihapus.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return back()->with('error', 'Gagal menghapus data: ' . $e->getMessage());
+        }
     }
 
     public function mapping(Request $request)
