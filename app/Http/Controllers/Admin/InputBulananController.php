@@ -82,7 +82,12 @@ class InputBulananController extends Controller
         // Clean data_rinci: only include if any value is non-empty
         if (isset($validated['data_rinci'])) {
             $rinci = array_filter($validated['data_rinci'], fn($v) => $v !== null && $v !== '');
-            $validated['data_rinci'] = !empty($rinci) ? $rinci : null;
+            if (!empty($rinci)) {
+                $rinci['ANGS'] = (float) $validated['jumlah_potongan'];
+                $validated['data_rinci'] = $rinci;
+            } else {
+                $validated['data_rinci'] = null;
+            }
         }
 
         InputBulanan::create($validated);
@@ -131,8 +136,14 @@ class InputBulananController extends Controller
         }
 
         if (isset($validated['data_rinci'])) {
-            $rinci = array_filter($validated['data_rinci'], fn($v) => $v !== null && $v !== '');
-            $validated['data_rinci'] = !empty($rinci) ? $rinci : null;
+            $rinciInput = array_filter($validated['data_rinci'], fn($v) => $v !== null && $v !== '');
+            $rinciExisting = $inputBulanan->data_rinci ?? [];
+            
+            // Merge: new input overrides existing, but existing fields like KDPR/NMPR are kept
+            $validated['data_rinci'] = array_merge($rinciExisting, $rinciInput);
+            
+            // Sync ANGS in data_rinci with top-level jumlah_potongan
+            $validated['data_rinci']['ANGS'] = (float) $validated['jumlah_potongan'];
         }
 
         $inputBulanan->update($validated);
@@ -180,17 +191,30 @@ class InputBulananController extends Controller
         $count = 0;
         foreach ($validated['potongan'] as $item) {
             if ($item['jumlah'] !== null && $item['jumlah'] > 0) {
-                InputBulanan::updateOrCreate(
-                    [
+                $existing = InputBulanan::where([
+                    'karyawan_id' => $item['karyawan_id'],
+                    'jenis_potongan_id' => $validated['jenis_potongan_id'],
+                    'bulan' => $validated['bulan'],
+                    'tahun' => $validated['tahun'],
+                ])->first();
+
+                if ($existing) {
+                    $rinci = $existing->data_rinci ?? [];
+                    $rinci['ANGS'] = (float) $item['jumlah'];
+                    // We keep other fields like KDPR, NMPR intact
+                    $existing->update([
+                        'jumlah_potongan' => $item['jumlah'],
+                        'data_rinci' => $rinci,
+                    ]);
+                } else {
+                    InputBulanan::create([
                         'karyawan_id' => $item['karyawan_id'],
                         'jenis_potongan_id' => $validated['jenis_potongan_id'],
                         'bulan' => $validated['bulan'],
                         'tahun' => $validated['tahun'],
-                    ],
-                    [
                         'jumlah_potongan' => $item['jumlah'],
-                    ]
-                );
+                    ]);
+                }
                 $count++;
             }
         }

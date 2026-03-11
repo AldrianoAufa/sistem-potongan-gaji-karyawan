@@ -50,9 +50,9 @@
                     <input type="number" name="tahun" class="form-control" value="{{ $inputBulanan->tahun }}" required>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label fw-semibold">Jumlah Potongan (Rp) <span class="text-danger">*</span></label>
-                    <input type="number" name="jumlah_potongan" class="form-control"
-                           value="{{ $inputBulanan->jumlah_potongan }}" min="0" step="1" required>
+                    <label class="form-label fw-semibold">Jumlah Potongan (Rp) <span class="text-secondary small">(Otomatis PKOK+RPBG)</span></label>
+                    <input type="number" name="jumlah_potongan" class="form-control bg-light"
+                           value="{{ $inputBulanan->jumlah_potongan }}" min="0" step="1" readonly>
                 </div>
             </div>
 
@@ -98,3 +98,25 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const pkokInput = document.querySelector('input[name="data_rinci[PKOK]"]');
+    const rpbgInput = document.querySelector('input[name="data_rinci[RPBG]"]');
+    const totalInput = document.querySelector('input[name="jumlah_potongan"]');
+
+    function calculateTotal() {
+        const pkok = parseFloat(pkokInput.value) || 0;
+        const rpbg = parseFloat(rpbgInput.value) || 0;
+        totalInput.value = (pkok + rpbg).toFixed(2);
+    }
+
+    if (pkokInput && rpbgInput && totalInput) {
+        pkokInput.addEventListener('input', calculateTotal);
+        rpbgInput.addEventListener('input', calculateTotal);
+    }
+});
+</script>
+@endpush
+

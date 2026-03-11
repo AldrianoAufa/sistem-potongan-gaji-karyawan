@@ -262,9 +262,6 @@
     {{-- Navbar --}}
     <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
         <div class="container-fluid">
-            <button class="btn btn-link text-dark d-lg-none me-2 p-0" id="sidebarToggle" style="font-size: 1.4rem;">
-                <i class="bi bi-list"></i>
-            </button>
             <a class="navbar-brand d-flex align-items-center" href="#">
                 <span style="background: var(--primary); color: white; border-radius: 6px; padding: 3px 7px; margin-right: 8px; font-size: 0.9rem; font-weight: 700;">PT</span>
                 Sistem e-Slip
@@ -309,11 +306,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // ===== SIDEBAR TOGGLE =====
-        document.getElementById('sidebarToggle')?.addEventListener('click', function() {
-            document.querySelector('.sidebar')?.classList.toggle('show');
-        });
-
         // ===== ALERT AUTO DISMISS =====
         setTimeout(function() {
             document.querySelectorAll('.alert-auto-dismiss').forEach(function(el) {

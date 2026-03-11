@@ -113,7 +113,7 @@ class ImportController extends Controller
             $reader->setReadDataOnly(true);
             $spreadsheet = $reader->load($file->getPathname());
             $worksheet = $spreadsheet->getActiveSheet();
-            $rows = $worksheet->toArray(null, true, false, true);
+            $rows = $worksheet->toArray(null, false, false, true);
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal membaca file Excel: ' . $e->getMessage());
         }
@@ -171,6 +171,13 @@ class ImportController extends Controller
             }
 
             $cust = trim($rowValues[$headerMap['CUST']] ?? '');
+            
+            // Normalisasi NIK numeric: hapus .0 yang tidak perlu (agar 1111.0 jadi 1111)
+            if (is_numeric($cust)) {
+                if (strpos($cust, '.') !== false && floatval($cust) == intval($cust)) {
+                    $cust = (string)intval($cust);
+                }
+            }
             $grup = trim($rowValues[$headerMap['GRUP']] ?? '');
             $angs = $rowValues[$headerMap['ANGS']] ?? 0;
 
@@ -380,11 +387,19 @@ class ImportController extends Controller
         $rpbg      = (float) $cached['rows'][$index]['rpbg'];
         $angsBaru  = $pkokBaru + $rpbg;
 
+        // Update top-level values
         $cached['rows'][$index]['pkok']             = $pkokBaru;
         $cached['rows'][$index]['jumlah_potongan']  = $angsBaru;
+        
+        // Sync to data_rinci (ensuring we don't overwrite the whole array)
+        if (!isset($cached['rows'][$index]['data_rinci'])) {
+             $cached['rows'][$index]['data_rinci'] = [];
+        }
         $cached['rows'][$index]['data_rinci']['PKOK'] = $pkokBaru;
-        // Hitung ulang warning
-        $excelAngs    = $cached['rows'][$index]['excel_angs'];
+        $cached['rows'][$index]['data_rinci']['ANGS'] = $angsBaru;
+
+        // Re-calculate warning based on discrepancy with ORIGINAL excel_angs
+        $excelAngs = $cached['rows'][$index]['excel_angs'];
         $cached['rows'][$index]['has_warning'] = (abs($excelAngs - $angsBaru) > 1 && $pkokBaru > 0);
 
         Cache::store('file')->put($request->cache_key, $cached, now()->addMinutes(60));
@@ -395,6 +410,8 @@ class ImportController extends Controller
             'rpbg'             => $rpbg,
             'jumlah_potongan'  => $angsBaru,
             'has_warning'      => $cached['rows'][$index]['has_warning'],
+            // Send back the updated data_rinci for verification if needed
+            'data_rinci'       => $cached['rows'][$index]['data_rinci'],
         ]);
     }
 

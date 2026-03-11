@@ -278,8 +278,8 @@
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold">Jumlah Potongan (Rp) <span class="text-danger">*</span></label>
-                            <input type="number" name="jumlah_potongan" class="form-control" min="0" step="1" required>
+                            <label class="form-label fw-semibold">Jumlah Potongan (Rp) <span class="text-secondary small">(Otomatis PKOK+RPBG)</span></label>
+                            <input type="number" name="jumlah_potongan" class="form-control bg-light" min="0" step="1" readonly>
                         </div>
                     </div>
 
@@ -345,6 +345,27 @@ window.addEventListener('scroll', function () {
 
 backToTopBtn.addEventListener('click', function () {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// Auto-calculate Total in Modal
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('tambahModal');
+    if (modal) {
+        const pkokInput = modal.querySelector('input[name="data_rinci[PKOK]"]');
+        const rpbgInput = modal.querySelector('input[name="data_rinci[RPBG]"]');
+        const totalInput = modal.querySelector('input[name="jumlah_potongan"]');
+
+        function calculateTotal() {
+            const pkok = parseFloat(pkokInput.value) || 0;
+            const rpbg = parseFloat(rpbgInput.value) || 0;
+            totalInput.value = (pkok + rpbg).toFixed(2);
+        }
+
+        if (pkokInput && rpbgInput && totalInput) {
+            pkokInput.addEventListener('input', calculateTotal);
+            rpbgInput.addEventListener('input', calculateTotal);
+        }
+    }
 });
 </script>
 @endpush

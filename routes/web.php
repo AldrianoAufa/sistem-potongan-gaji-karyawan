@@ -35,10 +35,11 @@ Route::middleware('auth')->group(function () {
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
 
-    Route::resource('karyawan', karyawanController::class)->except(['show']);
-    Route::delete('karyawan-all', [karyawanController::class, 'destroyAll'])->name('karyawan.destroy-all');
-    Route::get('karyawan-mapping', [karyawanController::class, 'mapping'])->name('karyawan.mapping');
+    Route::delete('karyawan-all', [KaryawanController::class, 'destroyAll'])->name('karyawan.destroy-all');
+    Route::resource('karyawan', KaryawanController::class)->except(['show']);
+    Route::get('karyawan-mapping', [KaryawanController::class, 'mapping'])->name('karyawan.mapping');
     Route::post('karyawan-mapping/{karyawan}', [karyawanController::class, 'updateMapping'])->name('karyawan.mapping.update');
+    Route::post('karyawan-sync-accounts', [KaryawanController::class, 'syncAccounts'])->name('karyawan.sync-accounts');
     Route::post('karyawan/{karyawan}/reset-password', [KaryawanController::class, 'resetPassword'])->name('karyawan.reset-password');
     Route::resource('jabatan', JabatanController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('departemen', DepartemenController::class)->only(['index', 'show', 'store', 'update', 'destroy'])->parameters(['departemen' => 'departemen']);

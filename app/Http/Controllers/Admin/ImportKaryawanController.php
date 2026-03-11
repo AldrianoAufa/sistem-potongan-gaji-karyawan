@@ -77,7 +77,7 @@ class ImportkaryawanController extends Controller
             $reader->setReadDataOnly(true);
             $spreadsheet = $reader->load($file->getPathname());
             $worksheet = $spreadsheet->getActiveSheet();
-            $rows = $worksheet->toArray(null, true, false, true);
+            $rows = $worksheet->toArray(null, false, false, true);
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal membaca file Excel: ' . $e->getMessage());
         }
@@ -130,6 +130,13 @@ class ImportkaryawanController extends Controller
                 }
 
                 $kode = trim($rowValues[$headerMap['NIK']] ?? '');
+                
+                // Normalisasi NIK numeric: hapus .0 yang tidak perlu, tapi jaga .11 dsb.
+                if (is_numeric($kode)) {
+                    if (strpos($kode, '.') !== false && floatval($kode) == intval($kode)) {
+                        $kode = (string)intval($kode);
+                    }
+                }
                 $nama = trim($rowValues[$headerMap['NAMA']] ?? '');
                 $jabatanNama = trim($rowValues[$headerMap['JABATAN']] ?? '');
                 $departemenKode = trim($rowValues[$headerMap['DEPARTEMEN']] ?? '');
@@ -178,10 +185,14 @@ class ImportkaryawanController extends Controller
                 }
                 $departemenId = $departemenMap[$departemenKode];
 
-                // Smart Merge Logic: Check if NIK is numeric and has a "base" version already in DB
+                // Smart Merge Logic: Check if NIK is numeric and handle potential decimal points
                 $targetKaryawan = null;
                 $isNumeric = is_numeric($kode);
-                $baseKode = $isNumeric ? (string)floor((float)$kode) : $kode;
+                
+                // For PT Primatex and similar, NIKs like 1111.11 are important.
+                // We shouldn't floor() it because 1111.11 is NOT the same as 1111.
+                // But we still want to match if we are updating an existing "integer" NIK with a "decimal" one.
+                $baseKode = $isNumeric ? (string)explode('.', (string)$kode)[0] : $kode;
 
                 // Try exact match first
                 $targetKaryawan = Karyawan::where('kode_karyawan', $kode)->first();
@@ -209,8 +220,10 @@ class ImportkaryawanController extends Controller
                     }
                 }
 
+                // Persist the changes
                 if ($targetKaryawan) {
                     $targetKaryawan->update([
+                        'kode_karyawan' => $targetKaryawan->kode_karyawan, // Include the potentially updated NIK
                         'nama' => $nama,
                         'jabatan_id' => $jabatanId,
                         'departemen_id' => $departemenId,
@@ -229,12 +242,12 @@ class ImportkaryawanController extends Controller
 
                 // Auto-create user account using NIK as username & password
                 if ($buatAkun) {
-                    $username = $karyawan->kode_karyawan; // Use the current (possibly updated) NIK
+                    $username = $karyawan->kode_karyawan; 
                     if ($karyawan->user) {
-                        // Already has account, sync both username and password with current NIK
+                        // Ensure password is also updated to the new NIK
                         $karyawan->user->update([
                             'username' => $username,
-                            'password' => $username
+                            'password' => $username,
                         ]);
                     } elseif (User::where('username', $username)->exists()) {
                         $errors[] = ['baris' => $rowNum, 'nik' => $kode, 'error' => "Username '{$username}' sudah digunakan"];

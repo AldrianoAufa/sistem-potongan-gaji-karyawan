@@ -192,16 +192,73 @@ class KaryawanController extends Controller
         return back()->with('success', 'Mapping potongan untuk ' . $karyawan->nama . ' berhasil diperbarui.');
     }
 
-    public function resetPassword(Karyawan $karyawan)
+    public function syncAccounts()
     {
-        $user = $karyawan->user;
+        ini_set('memory_limit', '1024M');
+        set_time_limit(600); // 10 menit (hashing password cukup berat)
 
-        if (!$user) {
-            return back()->with('error', 'Karyawan ' . $karyawan->nama . ' belum memiliki akun user.');
+        $karyawans = Karyawan::with('user')->get();
+        
+        // Ambil user yang tidak terhubung ke karyawan (floating accounts)
+        $unlinkedUsers = User::whereNull('karyawan_id')->get()->keyBy('username');
+        
+        $countSuccess = 0;
+
+        foreach ($karyawans as $karyawan) {
+            $username = $karyawan->kode_karyawan;
+            $user = $karyawan->user;
+
+            if (!$user) {
+                // Jika karyawan tdk punya user, cek apakah ada user "floating" dgn username ini
+                if (isset($unlinkedUsers[$username])) {
+                    $user = $unlinkedUsers[$username];
+                    $user->karyawan_id = $karyawan->id;
+                    unset($unlinkedUsers[$username]);
+                } else {
+                    // Cek konflik dengan karyawan LAIN
+                    if (User::where('username', $username)->whereNotNull('karyawan_id')->exists()) {
+                        continue;
+                    }
+                    
+                    $user = new User([
+                        'karyawan_id' => $karyawan->id,
+                        'role' => 'user'
+                    ]);
+                }
+            }
+
+            // Update username dan reset password
+            $user->username = $username;
+            $user->password = $username;
+            $user->save();
+            $countSuccess++;
         }
 
-        $user->update(['password' => $karyawan->kode_karyawan]);
+        return back()->with('success', "Proses sinkronisasi selesai. $countSuccess akun telah diperbarui sesuai NIK.");
+    }
 
-        return back()->with('success', 'Password ' . $karyawan->nama . ' berhasil di-reset ke NIK (' . $karyawan->kode_karyawan . ').');
+    public function resetPassword(Karyawan $karyawan)
+    {
+        $username = $karyawan->kode_karyawan;
+
+        // Find existing user by ID or Username
+        $user = User::where('karyawan_id', $karyawan->id)->first() 
+                ?? User::where('username', $username)->first();
+
+        if ($user && !is_null($user->karyawan_id) && $user->karyawan_id != $karyawan->id) {
+            return back()->with('error', "Gagal: Username '{$username}' sudah digunakan oleh orang lain.");
+        }
+
+        if (!$user) {
+            $user = new User(['karyawan_id' => $karyawan->id, 'role' => 'user']);
+        } else {
+            $user->karyawan_id = $karyawan->id; // Link if unlinked
+        }
+
+        $user->username = $username;
+        $user->password = $username;
+        $user->save();
+
+        return back()->with('success', 'Akun ' . $karyawan->nama . ' berhasil di-sync (Username/Pass: ' . $username . ').');
     }
 }

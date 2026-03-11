@@ -225,6 +225,8 @@
                 <tr class="table-warning">
                     <th width="40" class="text-center">#</th>
                     <th width="50" class="text-center">Baris</th>
+                    <th width="80">KDPR</th>
+                    <th width="120">NMPR</th>
                     <th width="110">NIK</th>
                     <th>Nama Karyawan</th>
                     <th>Jenis Potongan</th>
@@ -245,6 +247,8 @@
                     data-warning="{{ $row['has_warning'] ? '1' : '0' }}">
                     <td class="text-center text-muted small row-num">{{ $i + 1 }}</td>
                     <td class="text-center"><span class="badge bg-secondary">{{ $row['baris'] }}</span></td>
+                    <td class="small text-muted">{{ $row['data_rinci']['KDPR'] ?? '-' }}</td>
+                    <td class="small text-muted">{{ $row['data_rinci']['NMPR'] ?? '-' }}</td>
                     <td><span class="badge bg-light text-dark border fw-semibold">{{ $row['kode_karyawan'] }}</span></td>
                     <td class="fw-medium">{{ $row['nama_karyawan'] }}</td>
                     <td>
@@ -327,6 +331,8 @@
                 <tr>
                     <th width="40" class="text-center">#</th>
                     <th width="50" class="text-center">Baris</th>
+                    <th width="80">KDPR</th>
+                    <th width="120">NMPR</th>
                     <th width="110">NIK</th>
                     <th>Nama Karyawan</th>
                     <th>Jenis Potongan</th>
@@ -347,6 +353,8 @@
                     data-warning="{{ $row['has_warning'] ? '1' : '0' }}">
                     <td class="text-center text-muted small row-num">{{ $i + 1 }}</td>
                     <td class="text-center"><span class="badge bg-secondary">{{ $row['baris'] }}</span></td>
+                    <td class="small text-muted">{{ $row['data_rinci']['KDPR'] ?? '-' }}</td>
+                    <td class="small text-muted">{{ $row['data_rinci']['NMPR'] ?? '-' }}</td>
                     <td><span class="badge bg-light text-dark border fw-semibold">{{ $row['kode_karyawan'] }}</span></td>
                     <td class="fw-medium">{{ $row['nama_karyawan'] }}</td>
                     <td>

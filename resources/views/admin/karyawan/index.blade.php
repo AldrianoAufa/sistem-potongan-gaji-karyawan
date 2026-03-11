@@ -39,6 +39,13 @@
                     <i class="bi bi-trash-fill me-1"></i>Hapus Semua Data
                 </button>
             </form>
+            <form action="{{ route('admin.karyawan.sync-accounts') }}" method="POST" class="d-inline"
+                  onsubmit="return confirm('Buat akun baru atau reset password sesuai NIK untuk SEMUA karyawan? Tindakan ini mungkin memakan waktu.')">
+                @csrf
+                <button type="submit" class="btn btn-outline-info btn-sm">
+                    <i class="bi bi-person-check-fill me-1"></i>Sinkronkan Akun
+                </button>
+            </form>
             <a href="{{ route('admin.import-karyawan.form') }}" class="btn btn-outline-success btn-sm">
                 <i class="bi bi-file-earmark-excel me-1"></i>Import Excel
             </a>
@@ -79,8 +86,16 @@
                             <form action="{{ route('admin.karyawan.reset-password', $item) }}" method="POST" class="d-inline"
                                   onsubmit="return confirm('Reset password {{ $item->nama }} ke NIK ({{ $item->kode_karyawan }})?')">
                                 @csrf
-                                <button type="submit" class="btn btn-info btn-sm" title="Reset Password ke NIK">
-                                    <i class="bi bi-key"></i>
+                                <button type="submit" class="btn btn-outline-info btn-sm" title="Reset Password ke NIK">
+                                    <i class="bi bi-key-fill"></i>
+                                </button>
+                            </form>
+                            @else
+                            <form action="{{ route('admin.karyawan.reset-password', $item) }}" method="POST" class="d-inline"
+                                  onsubmit="return confirm('Buat akun user untuk {{ $item->nama }} dengan password sesuai NIK?')">
+                                @csrf
+                                <button type="submit" class="btn btn-outline-secondary btn-sm" title="Buat Akun User">
+                                    <i class="bi bi-person-plus-fill"></i>
                                 </button>
                             </form>
                             @endif
