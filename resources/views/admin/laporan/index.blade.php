@@ -39,17 +39,7 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-3">
-                <label class="form-label mb-0" style="font-size: 0.8rem;">Karyawan</label>
-                <select name="karyawan_id" class="form-select form-select-sm">
-                    <option value="">Semua</option>
-                    @foreach($karyawanList as $a)
-                    <option value="{{ $a->id }}" {{ request('karyawan_id') == $a->id ? 'selected' : '' }}>
-                        {{ $a->kode_karyawan }} — {{ $a->nama }}
-                    </option>
-                    @endforeach
-                </select>
-            </div>
+
             <div class="col-md-2">
                 <button class="btn btn-primary btn-sm w-100"><i class="bi bi-search me-1"></i>Tampilkan</button>
             </div>
@@ -69,7 +59,10 @@
     <!-- Data Table -->
     <div class="col-lg-8">
         <div class="card card-custom">
-            <div class="card-header">Detail Potongan</div>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Detail Potongan</span>
+                <a href="{{ route('admin.laporan.index') }}" class="btn btn-sm btn-outline-secondary">Reset Filter</a>
+            </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-custom table-hover mb-0">

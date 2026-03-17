@@ -60,7 +60,6 @@ class LaporanController extends Controller
             ->get();
 
         $jenisPotonganList = JenisPotongan::orderBy('nama_potongan')->get();
-        $karyawanList = karyawan::orderBy('nama')->get();
 
         // Tahun yang tersedia di data
         $availableYears = InputBulanan::select('tahun')
@@ -70,7 +69,7 @@ class LaporanController extends Controller
 
         return view('admin.laporan.index', compact(
             'laporan', 'totalPotongan', 'ringkasan',
-            'jenisPotonganList', 'karyawanList', 'availableYears'
+            'jenisPotonganList', 'availableYears'
         ));
     }
 
@@ -97,7 +96,7 @@ class LaporanController extends Controller
         $spreadsheet = new Spreadsheet();
         $spreadsheet->removeSheetByIndex(0); // Remove default sheet
 
-        $headers = ['No', 'NIK', 'Nama Karyawan', 'Jenis Potongan', 'Kode Potongan',
+        $headers = ['No', 'NIK', 'Nama Karyawan', 'Bulan', 'Jenis Potongan', 'Kode Potongan',
                      'Jumlah Potongan', 'PINJ', 'AWAL', 'BULN', 'KALI', 'PKOK', 'RPBG', 'SALD'];
 
         $headerStyle = [
@@ -119,7 +118,7 @@ class LaporanController extends Controller
 
             // Title row
             $sheet->setCellValue('A1', "Data Potongan Gaji - {$bulanName} {$tahun}");
-            $sheet->mergeCells('A1:M1');
+            $sheet->mergeCells('A1:N1');
             $sheet->getStyle('A1')->applyFromArray([
                 'font' => ['bold' => true, 'size' => 14],
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
@@ -130,7 +129,7 @@ class LaporanController extends Controller
                 $col = chr(65 + $colIndex); // A, B, C...
                 $sheet->setCellValue("{$col}3", $header);
             }
-            $sheet->getStyle('A3:M3')->applyFromArray($headerStyle);
+            $sheet->getStyle('A3:N3')->applyFromArray($headerStyle);
             $sheet->getRowDimension(3)->setRowHeight(25);
 
             // Data
@@ -144,16 +143,17 @@ class LaporanController extends Controller
                 $sheet->setCellValue("A{$rowNum}", $no);
                 $sheet->setCellValue("B{$rowNum}", $item->karyawan->kode_karyawan ?? '-');
                 $sheet->setCellValue("C{$rowNum}", $item->karyawan->nama ?? '-');
-                $sheet->setCellValue("D{$rowNum}", $item->jenisPotongan->nama_potongan ?? '-');
-                $sheet->setCellValue("E{$rowNum}", $item->jenisPotongan->kode_potongan ?? '-');
-                $sheet->setCellValue("F{$rowNum}", $item->jumlah_potongan);
-                $sheet->setCellValue("G{$rowNum}", $rinci['PINJ'] ?? 0);
-                $sheet->setCellValue("H{$rowNum}", $rinci['AWAL'] ?? 0);
-                $sheet->setCellValue("I{$rowNum}", $rinci['BULN'] ?? 0);
-                $sheet->setCellValue("J{$rowNum}", $rinci['KALI'] ?? 0);
-                $sheet->setCellValue("K{$rowNum}", $rinci['PKOK'] ?? 0);
-                $sheet->setCellValue("L{$rowNum}", $rinci['RPBG'] ?? 0);
-                $sheet->setCellValue("M{$rowNum}", $rinci['SALD'] ?? 0);
+                $sheet->setCellValue("D{$rowNum}", $bulanName);
+                $sheet->setCellValue("E{$rowNum}", $item->jenisPotongan->nama_potongan ?? '-');
+                $sheet->setCellValue("F{$rowNum}", $item->jenisPotongan->kode_potongan ?? '-');
+                $sheet->setCellValue("G{$rowNum}", $item->jumlah_potongan);
+                $sheet->setCellValue("H{$rowNum}", $rinci['PINJ'] ?? 0);
+                $sheet->setCellValue("I{$rowNum}", $rinci['AWAL'] ?? 0);
+                $sheet->setCellValue("J{$rowNum}", $rinci['BULN'] ?? 0);
+                $sheet->setCellValue("K{$rowNum}", $rinci['KALI'] ?? 0);
+                $sheet->setCellValue("L{$rowNum}", $rinci['PKOK'] ?? 0);
+                $sheet->setCellValue("M{$rowNum}", $rinci['RPBG'] ?? 0);
+                $sheet->setCellValue("N{$rowNum}", $rinci['SALD'] ?? 0);
 
                 $totalJumlah += $item->jumlah_potongan;
                 $no++;
@@ -161,23 +161,23 @@ class LaporanController extends Controller
             }
 
             // Apply data style
-            $sheet->getStyle("A4:M" . ($rowNum - 1))->applyFromArray($dataStyle);
+            $sheet->getStyle("A4:N" . ($rowNum - 1))->applyFromArray($dataStyle);
 
             // Number format for currency columns
-            $sheet->getStyle("F4:F" . ($rowNum - 1))->getNumberFormat()->setFormatCode('#,##0');
-            $sheet->getStyle("G4:M" . ($rowNum - 1))->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle("G4:G" . ($rowNum - 1))->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle("H4:N" . ($rowNum - 1))->getNumberFormat()->setFormatCode('#,##0');
 
             // Total row
-            $sheet->setCellValue("E{$rowNum}", 'TOTAL');
-            $sheet->setCellValue("F{$rowNum}", $totalJumlah);
-            $sheet->getStyle("E{$rowNum}:F{$rowNum}")->applyFromArray([
+            $sheet->setCellValue("F{$rowNum}", 'TOTAL');
+            $sheet->setCellValue("G{$rowNum}", $totalJumlah);
+            $sheet->getStyle("F{$rowNum}:G{$rowNum}")->applyFromArray([
                 'font' => ['bold' => true, 'size' => 12],
                 'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
             ]);
-            $sheet->getStyle("F{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle("G{$rowNum}")->getNumberFormat()->setFormatCode('#,##0');
 
             // Auto-size columns
-            foreach (range('A', 'M') as $col) {
+            foreach (range('A', 'N') as $col) {
                 $sheet->getColumnDimension($col)->setAutoSize(true);
             }
         }

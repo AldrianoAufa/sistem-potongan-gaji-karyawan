@@ -41,11 +41,8 @@ class InputBulananController extends Controller
         
         $inputBulanan  = $query->orderBy('id', 'asc')->paginate($perPage)->withQueryString();
 
-        $karyawanList = karyawan::orderBy('nama')->get();
-        $jenisPotonganList = JenisPotongan::orderBy('nama_potongan')->get();
-
         return view('admin.input-bulanan.index', compact(
-            'inputBulanan', 'totalPotongan', 'karyawanList', 'jenisPotonganList', 'perPage'
+            'inputBulanan', 'totalPotongan', 'perPage'
         ));
     }
 

@@ -197,42 +197,36 @@ class KaryawanController extends Controller
         ini_set('memory_limit', '1024M');
         set_time_limit(600); // 10 menit (hashing password cukup berat)
 
-        $karyawans = Karyawan::with('user')->get();
-        
-        // Ambil user yang tidak terhubung ke karyawan (floating accounts)
-        $unlinkedUsers = User::whereNull('karyawan_id')->get()->keyBy('username');
-        
         $countSuccess = 0;
+        $unlinkedUsers = User::whereNull('karyawan_id')->get()->keyBy('username');
 
-        foreach ($karyawans as $karyawan) {
-            $username = $karyawan->kode_karyawan;
-            $user = $karyawan->user;
+        Karyawan::with('user')->chunk(200, function($karyawans) use (&$countSuccess, &$unlinkedUsers) {
+            foreach ($karyawans as $karyawan) {
+                $username = $karyawan->kode_karyawan;
+                $user = $karyawan->user;
 
-            if (!$user) {
-                // Jika karyawan tdk punya user, cek apakah ada user "floating" dgn username ini
-                if (isset($unlinkedUsers[$username])) {
-                    $user = $unlinkedUsers[$username];
-                    $user->karyawan_id = $karyawan->id;
-                    unset($unlinkedUsers[$username]);
-                } else {
-                    // Cek konflik dengan karyawan LAIN
-                    if (User::where('username', $username)->whereNotNull('karyawan_id')->exists()) {
-                        continue;
+                if (!$user) {
+                    if (isset($unlinkedUsers[$username])) {
+                        $user = $unlinkedUsers[$username];
+                        $user->karyawan_id = $karyawan->id;
+                        unset($unlinkedUsers[$username]);
+                    } else {
+                        if (User::where('username', $username)->whereNotNull('karyawan_id')->exists()) {
+                            continue;
+                        }
+                        $user = new User([
+                            'karyawan_id' => $karyawan->id,
+                            'role' => 'user'
+                        ]);
                     }
-                    
-                    $user = new User([
-                        'karyawan_id' => $karyawan->id,
-                        'role' => 'user'
-                    ]);
                 }
-            }
 
-            // Update username dan reset password
-            $user->username = $username;
-            $user->password = $username;
-            $user->save();
-            $countSuccess++;
-        }
+                $user->username = $username;
+                $user->password = $username;
+                $user->save();
+                $countSuccess++;
+            }
+        });
 
         return back()->with('success', "Proses sinkronisasi selesai. $countSuccess akun telah diperbarui sesuai NIK.");
     }

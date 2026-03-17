@@ -55,7 +55,7 @@
                             <a href="{{ route('user.potongan.slip', [now()->month, now()->year]) }}" 
                                class="btn btn-outline-primary btn-lg py-3" 
                                style="border-radius: 12px;" title="Lihat Full">
-                                <i class="bi bi-fullscreen"></i>
+                                <i class="bi bi-eye"></i>
                             </a>
                         </div>
                         <p class="mt-2 text-success small fw-bold">

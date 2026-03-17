@@ -134,9 +134,9 @@
                 <span class="text-muted">(terfilter)</span>
             @endif
         </div>
-        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#tambahModal">
+        <a href="{{ route('admin.input-bulanan.create') }}" class="btn btn-sm btn-primary">
             <i class="bi bi-plus-lg me-1"></i> Tambah
-        </button>
+        </a>
     </div>
 
     <div class="card-body p-0">
@@ -230,100 +230,6 @@
     </div>
     @endif
 </div>
-
-{{-- Tambah Modal --}}
-<div class="modal fade" id="tambahModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form method="POST" action="{{ route('admin.input-bulanan.store') }}">
-                @csrf
-                <div class="modal-header">
-                    <h5 class="modal-title">Tambah Potongan Bulanan</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Karyawan <span class="text-danger">*</span></label>
-                            <select name="karyawan_id" class="form-select" required>
-                                <option value="">-- Pilih karyawan --</option>
-                                @foreach($karyawanList as $a)
-                                <option value="{{ $a->id }}">{{ $a->kode_karyawan }} — {{ $a->nama }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Jenis Potongan <span class="text-danger">*</span></label>
-                            <select name="jenis_potongan_id" class="form-select" required>
-                                <option value="">-- Pilih Jenis --</option>
-                                @foreach($jenisPotonganList as $jp)
-                                <option value="{{ $jp->id }}">{{ $jp->kode_potongan }} — {{ $jp->nama_potongan }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Bulan <span class="text-danger">*</span></label>
-                            <select name="bulan" class="form-select" required>
-                                @foreach(['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'] as $i => $nama)
-                                <option value="{{ $i+1 }}" {{ now()->month == $i+1 ? 'selected' : '' }}>{{ $nama }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Tahun <span class="text-danger">*</span></label>
-                            <select name="tahun" class="form-select" required>
-                                @for($y = now()->year; $y >= 2020; $y--)
-                                <option value="{{ $y }}">{{ $y }}</option>
-                                @endfor
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Jumlah Potongan (Rp) <span class="text-secondary small">(Otomatis PKOK+RPBG)</span></label>
-                            <input type="number" name="jumlah_potongan" class="form-control bg-light" min="0" step="1" readonly>
-                        </div>
-                    </div>
-
-                    <hr class="my-3">
-                    <h6 class="text-muted mb-3"><i class="bi bi-info-circle me-1"></i>Detail Pinjaman (Opsional)</h6>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label" style="font-size: 0.85rem;">Pinjaman (PINJ)</label>
-                            <input type="number" name="data_rinci[PINJ]" class="form-control form-control-sm" step="1">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label" style="font-size: 0.85rem;">Saldo Awal (AWAL)</label>
-                            <input type="number" name="data_rinci[AWAL]" class="form-control form-control-sm" step="1">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label" style="font-size: 0.85rem;">Bulan Ke (BULN)</label>
-                            <input type="number" name="data_rinci[BULN]" class="form-control form-control-sm" min="0">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label" style="font-size: 0.85rem;">Total Kali (KALI)</label>
-                            <input type="number" name="data_rinci[KALI]" class="form-control form-control-sm" min="0">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label" style="font-size: 0.85rem;">Pokok (PKOK)</label>
-                            <input type="number" name="data_rinci[PKOK]" class="form-control form-control-sm" step="1">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label" style="font-size: 0.85rem;">Bunga (RPBG)</label>
-                            <input type="number" name="data_rinci[RPBG]" class="form-control form-control-sm" step="1">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label" style="font-size: 0.85rem;">Sisa Saldo (SALD)</label>
-                            <input type="number" name="data_rinci[SALD]" class="form-control form-control-sm" step="1">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Simpan</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 @endsection
 
 {{-- Back to Top Button --}}
@@ -347,25 +253,5 @@ backToTopBtn.addEventListener('click', function () {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-// Auto-calculate Total in Modal
-document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('tambahModal');
-    if (modal) {
-        const pkokInput = modal.querySelector('input[name="data_rinci[PKOK]"]');
-        const rpbgInput = modal.querySelector('input[name="data_rinci[RPBG]"]');
-        const totalInput = modal.querySelector('input[name="jumlah_potongan"]');
-
-        function calculateTotal() {
-            const pkok = parseFloat(pkokInput.value) || 0;
-            const rpbg = parseFloat(rpbgInput.value) || 0;
-            totalInput.value = (pkok + rpbg).toFixed(2);
-        }
-
-        if (pkokInput && rpbgInput && totalInput) {
-            pkokInput.addEventListener('input', calculateTotal);
-            rpbgInput.addEventListener('input', calculateTotal);
-        }
-    }
-});
 </script>
 @endpush

@@ -24,10 +24,17 @@ class DashboardController extends Controller
             ->where('tahun', $tahunIni)
             ->sum('jumlah_potongan');
 
+        $latestInput = InputBulanan::orderBy('tahun', 'desc')->orderBy('bulan', 'desc')->first();
+        if ($latestInput) {
+            $baseDate = \Carbon\Carbon::createFromDate($latestInput->tahun, $latestInput->bulan, 1);
+        } else {
+            $baseDate = now();
+        }
+
         // Data grafik 6 bulan terakhir
         $grafikData = [];
         for ($i = 5; $i >= 0; $i--) {
-            $date = now()->subMonths($i);
+            $date = $baseDate->copy()->subMonths($i);
             $bulan = $date->month;
             $tahun = $date->year;
             $total = InputBulanan::where('bulan', $bulan)

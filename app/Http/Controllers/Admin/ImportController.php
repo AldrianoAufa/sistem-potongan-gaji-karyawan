@@ -65,9 +65,7 @@ class ImportController extends Controller
             }
         }
 
-        $departemenList = \App\Models\Departemen::with(['karyawan' => function ($q) {
-            $q->orderBy('nama')->with('jabatan');
-        }])->withCount('karyawan')->orderBy('nama_departemen')->get();
+
 
         // Data untuk input kolektif
         $jenisPotonganAll = JenisPotongan::orderBy('nama_potongan')->get();
@@ -90,7 +88,7 @@ class ImportController extends Controller
         }
 
         return view('admin.import.index', compact(
-            'departemenList', 'jenisPotonganAll', 'bulanOptions',
+            'jenisPotonganAll', 'bulanOptions',
             'selectedPotongan', 'karyawanKolektif', 'activeImport'
         ));
     }
